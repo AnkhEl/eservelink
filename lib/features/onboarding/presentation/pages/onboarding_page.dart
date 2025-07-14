@@ -1,4 +1,7 @@
+import 'package:eservelink/core/constants/app_colors.dart';
 import 'package:eservelink/features/auth/presentation/pages/login_page.dart';
+import 'package:eservelink/features/onboarding/data/datasources/onboarding_pages_local_datasource.dart';
+import 'package:eservelink/features/onboarding/domain/entities/onboarding_info.dart';
 import 'package:eservelink/features/onboarding/presentation/widgets/page_indicator_button.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -13,61 +16,86 @@ class OnboardingPage extends StatefulWidget {
 class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _controller = PageController();
   bool onLastPage = false;
+  List<OnboardingInfo> onboardingList =
+      OnboardingPagesLocalDatasource().getOnboardingPageData;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          PageView(
-            controller: _controller,
-            onPageChanged: (pageIndex) {
-              setState(() {
-                onLastPage = pageIndex == 2;
-              });
-            },
-            children: [
-              Container(color: Colors.red),
-              Container(color: Colors.orange),
-              Container(color: Colors.yellow),
-            ],
-          ),
-          Container(
-            alignment: Alignment(0, 0.85),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      body: Container(
+        margin: EdgeInsets.symmetric(horizontal: 15),
+        child: PageView.builder(
+          itemCount: onboardingList.length,
+          controller: _controller,
+          onPageChanged: onPageChanged,
+          itemBuilder: (context, index) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                PageIndicatorButton(
-                  text: 'Skip',
-                  onTap: onSkipTap,
-                  controller: _controller,
+                Image.asset(onboardingList[index].imagePath),
+                SizedBox(height: 10),
+                Text(
+                  onboardingList[index].title,
+                  style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
                 ),
-                SmoothPageIndicator(
-                  controller: _controller,
-                  count: 3,
-                  effect: WormEffect(),
+                SizedBox(height: 10),
+                Text(
+                  textAlign: TextAlign.center,
+                  onboardingList[index].description,
+                  style: TextStyle(color: Colors.grey.shade700, fontSize: 15),
                 ),
-                onLastPage
-                    ? PageIndicatorButton(
-                      text: 'Done',
-                      onTap: () => onDoneTap(context),
+              ],
+            );
+          },
+        ),
+      ),
+      bottomSheet: Container(
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child:
+            onLastPage
+                ? getStartedBtn()
+                : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    PageIndicatorButton(
+                      text: 'Skip',
+                      onTap: onSkipTap,
                       controller: _controller,
-                    )
-                    : PageIndicatorButton(
+                    ),
+                    SmoothPageIndicator(
+                      onDotClicked:
+                          (index) => _controller.animateToPage(
+                            index,
+                            duration: Duration(milliseconds: 600),
+                            curve: Curves.easeIn,
+                          ),
+                      controller: _controller,
+                      count: onboardingList.length,
+                      effect: WormEffect(activeDotColor: AppColors.primary),
+                    ),
+                    PageIndicatorButton(
                       text: 'Next',
                       onTap: onNextTap,
                       controller: _controller,
                     ),
-              ],
-            ),
-          ),
-        ],
+                  ],
+                ),
       ),
     );
   }
 
+  void onPageChanged(index) {
+    setState(() {
+      onLastPage = index == onboardingList.length - 1;
+    });
+  }
+
   void onSkipTap() {
-    _controller.jumpToPage(2);
+    _controller.animateToPage(
+      onboardingList.length - 1,
+      duration: Duration(milliseconds: 600),
+      curve: Curves.easeIn,
+    );
   }
 
   void onNextTap() {
@@ -77,10 +105,25 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
-  void onDoneTap(BuildContext context) {
+  void onDoneTap() async {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => LoginPage()),
+    );
+  }
+
+  Widget getStartedBtn() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      width: MediaQuery.of(context).size.width * .9,
+      height: 55,
+      child: TextButton(
+        onPressed: onDoneTap,
+        child: Text('Get Started', style: TextStyle(color: Colors.white)),
+      ),
     );
   }
 }

@@ -16,7 +16,7 @@ class PageIndicatorButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Text(text, style: TextStyle(fontSize: 18)),
+      child: Text(text, style: TextStyle(fontSize: 20)),
     );
   }
 }
