@@ -5,13 +5,13 @@ import 'package:eservelink/features/auth/domain/entities/user_entity.dart';
 import 'package:eservelink/features/auth/domain/repositories/auth_repository.dart';
 
 class RegisterWithEmail
-    implements UseCase<UserEntity, RegisterWithEmailParams> {
+    implements UseCase<UserEntity?, RegisterWithEmailParams> {
   final AuthRepository repository;
 
   RegisterWithEmail(this.repository);
 
   @override
-  Future<Either<Failure, UserEntity>> call(
+  Future<Either<Failure, UserEntity?>> call(
     RegisterWithEmailParams params,
   ) async {
     final result = await repository.registerWithEmail(

@@ -26,3 +26,19 @@ class SignInWithEmailEvent extends AuthEvent {
   @override
   List<Object?> get props => [email, password];
 }
+
+class SignInWithGoogleEvent extends AuthEvent {
+  const SignInWithGoogleEvent();
+}
+
+class SignInWithAppleEvent extends AuthEvent {
+  const SignInWithAppleEvent();
+}
+
+class GetCurrentUserEvent extends AuthEvent {
+  const GetCurrentUserEvent();
+}
+
+class SignOutEvent extends AuthEvent {
+  const SignOutEvent();
+}
