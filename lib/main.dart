@@ -1,12 +1,18 @@
+import 'package:eservelink/features/auth/presentation/pages/login_page.dart';
 import 'package:eservelink/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final sharedPref = await SharedPreferences.getInstance();
+  final isOnboarded = sharedPref.getBool('isOnboarded') ?? false;
+  runApp(MyApp(isOnboarded: isOnboarded));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isOnboarded;
+  const MyApp({super.key, this.isOnboarded = false});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +22,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: OnboardingPage(),
+      home: isOnboarded ? LoginPage() : OnboardingPage(),
     );
   }
 }

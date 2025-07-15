@@ -5,6 +5,7 @@ import 'package:eservelink/features/onboarding/domain/entities/onboarding_info.d
 import 'package:eservelink/features/onboarding/presentation/widgets/page_indicator_button.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -106,7 +107,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   void onDoneTap() async {
-    Navigator.push(
+    final sharedPref = await SharedPreferences.getInstance();
+    await sharedPref.setBool("isOnboarded", true);
+
+    if (!mounted) return;
+
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => LoginPage()),
     );
