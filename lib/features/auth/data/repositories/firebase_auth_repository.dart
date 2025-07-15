@@ -49,15 +49,22 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<Either<Failure, UserEntity?>> registerWithEmail({
     required String email,
     required String password,
+    required String name,
   }) async {
     try {
       final creds = await firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      return Right(_userFromFirebaseUser(creds.user));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+
+      await creds.user?.updateDisplayName(name);
+      await creds.user?.reload(); // Ensure the changes reflect
+      final updatedUser = firebaseAuth.currentUser;
+      return Right(_userFromFirebaseUser(updatedUser));
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      return Left(ServerFailure(e.message ?? 'Unknown registration error'));
+    } catch (_) {
+      return Left(ServerFailure('Registration failed'));
     }
   }
 

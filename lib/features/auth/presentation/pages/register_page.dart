@@ -14,13 +14,20 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
 
   void _onRegisterPressed() {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
+    final name = _nameController.text.trim();
+
     context.read<AuthBloc>().add(
-      RegisterWithEmailEvent(email: email, password: password),
+      RegisterWithEmailEvent(email: email, password: password, name: name),
     );
+  }
+
+  void _onGoogleSignInPressed() {
+    context.read<AuthBloc>().add(const SignInWithGoogleEvent());
   }
 
   @override
@@ -58,10 +65,26 @@ class _RegisterPageState extends State<RegisterPage> {
                   decoration: const InputDecoration(labelText: 'Password'),
                   obscureText: true,
                 ),
+                TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(labelText: 'Name'),
+                ),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _onRegisterPressed,
                   child: const Text('Register'),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.login),
+                  label: const Text('Continue with Google'),
+                  onPressed: _onGoogleSignInPressed,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black87,
+                    minimumSize: const Size.fromHeight(50),
+                    side: const BorderSide(color: Colors.black12),
+                  ),
                 ),
               ],
             ),

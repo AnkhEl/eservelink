@@ -17,6 +17,7 @@ class RegisterWithEmail
     final result = await repository.registerWithEmail(
       email: params.email,
       password: params.password,
+      name: params.name,
     );
 
     return result.fold((failure) => Left(failure), (user) {
@@ -32,6 +33,11 @@ class RegisterWithEmail
 class RegisterWithEmailParams {
   final String email;
   final String password;
+  final String name;
 
-  RegisterWithEmailParams({required this.email, required this.password});
+  RegisterWithEmailParams({
+    required this.name,
+    required this.email,
+    required this.password,
+  });
 }
