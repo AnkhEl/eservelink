@@ -1,7 +1,6 @@
-// lib/features/auth/data/repositories/firebase_auth_repository.dart
-
 import 'package:dartz/dartz.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
@@ -71,25 +70,30 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<Either<Failure, UserEntity?>> signInWithGoogle() async {
     try {
-      final googleUser = await googleSignIn.authenticate(
-        scopeHint: ['email', 'profile'],
-      );
-
-      if (googleUser == null) return Right(null);
-
-      final idToken = googleUser.authentication.idToken;
-      if (idToken == null) {
-        return Left(ServerFailure('Missing Google ID token'));
-      }
-
+      await GoogleSignIn.instance.initialize();
+      final GoogleSignInAccount googleUser = await GoogleSignIn.instance
+          .authenticate(scopeHint: ['email']);
+      final GoogleSignInClientAuthorization? authorization;
+      authorization = await googleUser.authorizationClient
+          .authorizationForScopes(['email']);
       final credential = firebase_auth.GoogleAuthProvider.credential(
-        idToken: idToken,
+        idToken: googleUser.authentication.idToken,
+        accessToken: authorization?.accessToken,
       );
-
-      final creds = await firebaseAuth.signInWithCredential(credential);
+      // Firebase sign‑in
+      final creds = await firebase_auth.FirebaseAuth.instance
+          .signInWithCredential(credential);
       return Right(_userFromFirebaseUser(creds.user));
+    } on GoogleSignInException catch (e) {
+      return Left(ServerFailure('Google sign-in failed: ${e.code.name}'));
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      return Left(ServerFailure(e.message ?? 'Firebase Auth error'));
+    } on FormatException {
+      return const Left(ServerFailure('Bad response format'));
+    } on PlatformException catch (e) {
+      return Left(ServerFailure('Platform error: ${e.code}'));
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure('Unexpected error: ${e.toString()}'));
     }
   }
 
