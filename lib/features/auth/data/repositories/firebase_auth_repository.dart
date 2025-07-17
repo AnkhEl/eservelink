@@ -73,8 +73,7 @@ class FirebaseAuthRepository implements AuthRepository {
       await GoogleSignIn.instance.initialize();
       final GoogleSignInAccount googleUser = await GoogleSignIn.instance
           .authenticate(scopeHint: ['email']);
-      final GoogleSignInClientAuthorization? authorization;
-      authorization = await googleUser.authorizationClient
+      final authorization = await googleUser.authorizationClient
           .authorizationForScopes(['email']);
       final credential = firebase_auth.GoogleAuthProvider.credential(
         idToken: googleUser.authentication.idToken,

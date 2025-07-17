@@ -20,13 +20,16 @@ class RegisterWithEmail
       name: params.name,
     );
 
-    return result.fold((failure) => Left(failure), (user) {
-      if (user == null) {
-        return Left(UnexpectedFailure('Registration failed'));
-      } else {
-        return Right(user);
-      }
-    });
+    return result.fold(
+      (failure) => Left(UnexpectedFailure("Registration failed")),
+      (user) {
+        if (user == null) {
+          return Left(UnexpectedFailure('Registration failed'));
+        } else {
+          return Right(user);
+        }
+      },
+    );
   }
 }
 
