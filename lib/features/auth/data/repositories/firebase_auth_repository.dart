@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:eservelink/features/auth/domain/repositories/user_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -11,10 +12,12 @@ import 'package:eservelink/features/auth/domain/repositories/auth_repository.dar
 class FirebaseAuthRepository implements AuthRepository {
   final firebase_auth.FirebaseAuth firebaseAuth;
   final GoogleSignIn googleSignIn;
+  final UserRepository userRepository;
 
   FirebaseAuthRepository({
     required this.firebaseAuth,
     required this.googleSignIn,
+    required this.userRepository,
   });
 
   UserEntity? _userFromFirebaseUser(firebase_auth.User? user) {
@@ -23,8 +26,8 @@ class FirebaseAuthRepository implements AuthRepository {
       uid: user.uid,
       email: user.email,
       displayName: user.displayName,
-      photoUrl: user.photoURL,
-      role: 'unknown', // You can load this from Firestore later
+      photoUrl: user.photoURL ?? "",
+      role: 'customer',
     );
   }
 
@@ -59,7 +62,9 @@ class FirebaseAuthRepository implements AuthRepository {
       await creds.user?.updateDisplayName(name);
       await creds.user?.reload(); // Ensure the changes reflect
       final updatedUser = firebaseAuth.currentUser;
-      return Right(_userFromFirebaseUser(updatedUser));
+      final updatedUserEntity = _userFromFirebaseUser(updatedUser);
+      await userRepository.saveUserIfNotExists(updatedUserEntity!);
+      return Right(updatedUserEntity);
     } on firebase_auth.FirebaseAuthException catch (e) {
       return Left(ServerFailure(e.message ?? 'Unknown registration error'));
     } catch (_) {
@@ -82,7 +87,9 @@ class FirebaseAuthRepository implements AuthRepository {
       // Firebase sign‑in
       final creds = await firebase_auth.FirebaseAuth.instance
           .signInWithCredential(credential);
-      return Right(_userFromFirebaseUser(creds.user));
+      final userEntity = _userFromFirebaseUser(creds.user);
+      await userRepository.saveUserIfNotExists(userEntity!);
+      return Right(userEntity);
     } on GoogleSignInException catch (e) {
       return Left(ServerFailure('Google sign-in failed: ${e.code.name}'));
     } on firebase_auth.FirebaseAuthException catch (e) {
