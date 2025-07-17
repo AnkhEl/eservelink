@@ -6,7 +6,6 @@ import 'package:eservelink/features/auth/domain/usecases/sign_in_with_google.dar
 import 'package:eservelink/features/auth/domain/usecases/sign_out.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/pages/login_page.dart';
-import 'package:eservelink/features/auth/presentation/pages/register_page.dart';
 import 'package:eservelink/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:eservelink/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -31,27 +30,27 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'EServeLink',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: MultiBlocProvider(
-        providers: [
-          BlocProvider<AuthBloc>(
-            create:
-                (_) => AuthBloc(
-                  registerWithEmail: di.sl<RegisterWithEmail>(),
-                  signInWithEmail: di.sl<SignInWithEmail>(),
-                  signInWithGoogle: di.sl<SignInWithGoogle>(),
-                  signInWithApple: di.sl<SignInWithApple>(),
-                  getCurrentUser: di.sl<GetCurrentUser>(),
-                  signOut: di.sl<SignOut>(),
-                ),
-          ),
-        ],
-        child: isOnboarded ? const RegisterPage() : const OnboardingPage(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(
+          create:
+              (_) => AuthBloc(
+                registerWithEmail: di.sl<RegisterWithEmail>(),
+                signInWithEmail: di.sl<SignInWithEmail>(),
+                signInWithGoogle: di.sl<SignInWithGoogle>(),
+                signInWithApple: di.sl<SignInWithApple>(),
+                getCurrentUser: di.sl<GetCurrentUser>(),
+                signOut: di.sl<SignOut>(),
+              ),
+        ),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'EServeLink',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        ),
+        home: isOnboarded ? LoginPage() : const OnboardingPage(),
       ),
     );
   }
