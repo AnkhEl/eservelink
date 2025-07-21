@@ -6,8 +6,15 @@ import 'package:eservelink/features/auth/presentation/bloc/auth_state.dart';
 import 'package:eservelink/features/auth/presentation/pages/login_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/home_page.dart';
 
-class AuthWrapper extends StatelessWidget {
+class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  bool _isOnRegisterPage = false;
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +24,12 @@ class AuthWrapper extends StatelessWidget {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(state.message)));
+        }
+
+        if (state is AuthShowLogin) {
+          _isOnRegisterPage = false;
+        } else if (state is AuthShowRegister) {
+          _isOnRegisterPage = true;
         }
       },
       builder: (context, state) {
@@ -32,6 +45,14 @@ class AuthWrapper extends StatelessWidget {
 
         if (state is AuthShowRegister) {
           return const RegisterPage();
+        }
+
+        if (state is AuthShowLogin) {
+          return const LoginPage();
+        }
+
+        if (state is AuthFailure) {
+          return _isOnRegisterPage ? const RegisterPage() : const LoginPage();
         }
 
         return const LoginPage();
