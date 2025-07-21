@@ -1,7 +1,7 @@
+import 'package:eservelink/features/auth/presentation/pages/register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:eservelink/features/auth/presentation/bloc/auth_event.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_state.dart';
 import 'package:eservelink/features/auth/presentation/pages/login_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/home_page.dart';
@@ -28,6 +28,10 @@ class AuthWrapper extends StatelessWidget {
 
         if (state is AuthSuccess) {
           return const HomePage();
+        }
+
+        if (state is AuthShowRegister) {
+          return const RegisterPage();
         }
 
         return const LoginPage();

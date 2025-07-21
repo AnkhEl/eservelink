@@ -47,3 +47,11 @@ class GetCurrentUserEvent extends AuthEvent {
 class SignOutEvent extends AuthEvent {
   const SignOutEvent();
 }
+
+class ShowLoginPageEvent extends AuthEvent {
+  const ShowLoginPageEvent();
+}
+
+class ShowRegisterPageEvent extends AuthEvent {
+  const ShowRegisterPageEvent();
+}

@@ -5,8 +5,6 @@ import 'package:eservelink/features/auth/presentation/bloc/auth_state.dart';
 import 'package:eservelink/features/auth/presentation/components/my_button.dart';
 import 'package:eservelink/features/auth/presentation/components/my_textfield.dart';
 import 'package:eservelink/features/auth/presentation/components/square_tile.dart';
-import 'package:eservelink/features/auth/presentation/pages/home_page.dart';
-import 'package:eservelink/features/auth/presentation/pages/register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -170,11 +168,8 @@ class _LoginPageState extends State<LoginPage> {
                           // const SizedBox(width: 4),
                           TextButton(
                             onPressed:
-                                () => Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => RegisterPage(),
-                                  ),
+                                () => context.read<AuthBloc>().add(
+                                  ShowRegisterPageEvent(),
                                 ),
                             child: Text(
                               'Register',

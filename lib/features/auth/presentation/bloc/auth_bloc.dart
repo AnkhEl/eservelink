@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:eservelink/core/usecases/usecase.dart';
 import 'package:eservelink/features/auth/domain/entities/user_entity.dart';
 import 'package:eservelink/features/auth/domain/usecases/get_current_user.dart';
@@ -32,6 +34,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignInWithAppleEvent>(_onSignInWithApple);
     on<GetCurrentUserEvent>(_onGetCurrentUser);
     on<SignOutEvent>(_onSignOut);
+    on<ShowLoginPageEvent>(_onShowLoginPage);
+    on<ShowRegisterPageEvent>(_onShowRegisterPage);
   }
 
   Future<void> _onSignInWithEmail(
@@ -124,5 +128,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } else {
       emit(const AuthFailure('Register or login to continue'));
     }
+  }
+
+  FutureOr<void> _onShowLoginPage(
+    ShowLoginPageEvent event,
+    Emitter<AuthState> emit,
+  ) {
+    emit(const AuthShowLogin());
+  }
+
+  FutureOr<void> _onShowRegisterPage(
+    ShowRegisterPageEvent event,
+    Emitter<AuthState> emit,
+  ) {
+    emit(const AuthShowRegister());
   }
 }

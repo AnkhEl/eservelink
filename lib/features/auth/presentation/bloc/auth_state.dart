@@ -29,3 +29,11 @@ class AuthFailure extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+class AuthShowLogin extends AuthState {
+  const AuthShowLogin();
+}
+
+class AuthShowRegister extends AuthState {
+  const AuthShowRegister();
+}
