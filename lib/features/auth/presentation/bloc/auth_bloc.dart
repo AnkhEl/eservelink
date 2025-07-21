@@ -106,10 +106,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     final result = await getCurrentUser(NoParams());
 
-    result.fold(
-      (failure) => emit(AuthFailure(failure.message)),
-      (user) => emitIfUserNotNull(user, emit),
-    );
+    result.fold((failure) => emit(AuthInitial()), (user) {
+      if (user != null) {
+        emit(AuthSuccess(user));
+      } else {
+        emit(AuthInitial());
+      }
+    });
   }
 
   Future<void> _onSignOut(SignOutEvent event, Emitter<AuthState> emit) async {
