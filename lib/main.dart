@@ -5,6 +5,8 @@ import 'package:eservelink/features/auth/domain/usecases/sign_in_with_email.dart
 import 'package:eservelink/features/auth/domain/usecases/sign_in_with_google.dart';
 import 'package:eservelink/features/auth/domain/usecases/sign_out.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:eservelink/features/auth/presentation/bloc/auth_event.dart';
+import 'package:eservelink/features/auth/presentation/components/auth_wrapper.dart';
 import 'package:eservelink/features/auth/presentation/pages/login_page.dart';
 import 'package:eservelink/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:eservelink/firebase_options.dart';
@@ -33,15 +35,22 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>(
-          create:
-              (_) => AuthBloc(
-                registerWithEmail: di.sl<RegisterWithEmail>(),
-                signInWithEmail: di.sl<SignInWithEmail>(),
-                signInWithGoogle: di.sl<SignInWithGoogle>(),
-                signInWithApple: di.sl<SignInWithApple>(),
-                getCurrentUser: di.sl<GetCurrentUser>(),
-                signOut: di.sl<SignOut>(),
-              ),
+          create: (_) {
+            final authBloc = AuthBloc(
+              registerWithEmail: di.sl<RegisterWithEmail>(),
+              signInWithEmail: di.sl<SignInWithEmail>(),
+              signInWithGoogle: di.sl<SignInWithGoogle>(),
+              signInWithApple: di.sl<SignInWithApple>(),
+              getCurrentUser: di.sl<GetCurrentUser>(),
+              signOut: di.sl<SignOut>(),
+            );
+
+            if (isOnboarded) {
+              authBloc.add(const GetCurrentUserEvent());
+            }
+
+            return authBloc;
+          },
         ),
       ],
       child: MaterialApp(
@@ -50,7 +59,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         ),
-        home: isOnboarded ? LoginPage() : const OnboardingPage(),
+        home: isOnboarded ? const AuthWrapper() : const OnboardingPage(),
       ),
     );
   }

@@ -21,7 +21,8 @@ class RegisterWithEmail
     );
 
     return result.fold(
-      (failure) => Left(UnexpectedFailure("Registration failed")),
+      (failure) =>
+          Left(UnexpectedFailure("Registration failed: ${failure.message}")),
       (user) {
         if (user == null) {
           return Left(UnexpectedFailure('Registration failed'));

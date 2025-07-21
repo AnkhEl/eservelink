@@ -66,7 +66,7 @@ class FirebaseAuthRepository implements AuthRepository {
       await userRepository.saveUserIfNotExists(updatedUserEntity!);
       return Right(updatedUserEntity);
     } on firebase_auth.FirebaseAuthException catch (e) {
-      return Left(ServerFailure(e.message ?? 'Unknown registration error'));
+      return Left(ServerFailure(_mapFirebaseAuthError(e.code)));
     } catch (_) {
       return Left(ServerFailure('Registration failed'));
     }
@@ -143,6 +143,19 @@ class FirebaseAuthRepository implements AuthRepository {
       return Right(_userFromFirebaseUser(firebaseAuth.currentUser));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  String _mapFirebaseAuthError(String code) {
+    switch (code) {
+      case 'email-already-in-use':
+        return 'This email is already in use.';
+      case 'invalid-email':
+        return 'Invalid email format.';
+      case 'weak-password':
+        return 'Password is too weak.';
+      default:
+        return 'An unknown error occurred.';
     }
   }
 }

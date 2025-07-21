@@ -24,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
 
   final _formKey = GlobalKey<FormState>();
 
-  void _onRegisterPressed() {
+  void _onSignInPressed() {
     if (_formKey.currentState!.validate()) {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
@@ -53,11 +53,6 @@ class _LoginPageState extends State<LoginPage> {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(const SnackBar(content: Text("Login Successful")));
-
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => HomePage()),
-            );
           }
         },
         builder: (context, state) {
@@ -108,7 +103,7 @@ class _LoginPageState extends State<LoginPage> {
 
                       const SizedBox(height: 30),
 
-                      MyButton(onTap: _onRegisterPressed, title: 'Register'),
+                      MyButton(onTap: _onSignInPressed, title: 'Sign In'),
 
                       const SizedBox(height: 30),
 
