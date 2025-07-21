@@ -122,7 +122,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     if (user != null) {
       emit(AuthSuccess(user));
     } else {
-      emit(const AuthFailure('User is null'));
+      emit(const AuthFailure('Register or login to continue'));
     }
   }
 }
