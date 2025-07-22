@@ -98,6 +98,30 @@ class _LoginPageState extends State<LoginPage> {
                         validator: AuthValidator.validatePassword,
                         textInputAction: TextInputAction.next,
                       ),
+                      SizedBox(height: 15),
+                      Container(
+                        margin: EdgeInsets.symmetric(horizontal: 25),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Text(
+                              "Forgot password?",
+                              style: TextStyle(color: Colors.grey[700]),
+                            ),
+                            SizedBox(width: 4),
+                            GestureDetector(
+                              onTap: () {},
+                              child: Text(
+                                'Reset',
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
                       const SizedBox(height: 30),
 
@@ -165,9 +189,9 @@ class _LoginPageState extends State<LoginPage> {
                             'Not a member?',
                             style: TextStyle(color: Colors.grey[700]),
                           ),
-                          // const SizedBox(width: 4),
-                          TextButton(
-                            onPressed:
+                          const SizedBox(width: 4),
+                          GestureDetector(
+                            onTap:
                                 () => context.read<AuthBloc>().add(
                                   ShowRegisterPageEvent(),
                                 ),

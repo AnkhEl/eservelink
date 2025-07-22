@@ -196,9 +196,9 @@ class _RegisterPageState extends State<RegisterPage> {
                             'Already a member?',
                             style: TextStyle(color: Colors.grey[700]),
                           ),
-                          // const SizedBox(width: 4),
-                          TextButton(
-                            onPressed:
+                          const SizedBox(width: 4),
+                          GestureDetector(
+                            onTap:
                                 () => context.read<AuthBloc>().add(
                                   ShowLoginPageEvent(),
                                 ),
