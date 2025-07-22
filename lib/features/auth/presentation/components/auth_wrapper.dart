@@ -60,6 +60,18 @@ class _AuthWrapperState extends State<AuthWrapper> {
           return PasswordResetPage();
         }
 
+        if (state is ResetPasswordLoading) {
+          return const PasswordResetPage();
+        }
+
+        if (state is ResetPasswordSuccess) {
+          return const PasswordResetPage();
+        }
+
+        if (state is ResetPasswordFailure) {
+          return const PasswordResetPage();
+        }
+
         if (state is AuthFailure) {
           return _isOnRegisterPage ? const RegisterPage() : const LoginPage();
         }

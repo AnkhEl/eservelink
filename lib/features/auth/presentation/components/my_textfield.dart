@@ -7,6 +7,7 @@ class MyTextField extends StatelessWidget {
   final String? Function(String?)? validator;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
+  final bool enabled;
 
   const MyTextField({
     super.key,
@@ -16,6 +17,7 @@ class MyTextField extends StatelessWidget {
     this.validator,
     this.keyboardType,
     this.textInputAction,
+    this.enabled = true,
   });
 
   @override
@@ -40,6 +42,7 @@ class MyTextField extends StatelessWidget {
           hintText: hintText,
           hintStyle: TextStyle(color: Colors.grey[500]),
         ),
+        enabled: enabled,
       ),
     );
   }

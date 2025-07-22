@@ -1,3 +1,4 @@
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:eservelink/core/util/auth_validator.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_event.dart';
@@ -29,24 +30,43 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        backgroundColor: Colors.grey[300],
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => context.read<AuthBloc>().add(ShowLoginPageEvent()),
+        ),
+      ),
       backgroundColor: Colors.grey[300],
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is ResetPasswordFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
+                elevation: 0,
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Colors.transparent,
+                content: AwesomeSnackbarContent(
+                  title: "Oops",
+                  message: state.message,
+                  contentType: ContentType.failure,
+                ),
               ),
             );
           } else if (state is ResetPasswordSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Password reset email sent to ${state.email}'),
-                backgroundColor: Colors.green,
+                elevation: 0,
+                behavior: SnackBarBehavior.floating,
+                backgroundColor: Colors.transparent,
+                content: AwesomeSnackbarContent(
+                  title: "Sent",
+                  message: 'Password reset email sent to ${state.email}',
+                  contentType: ContentType.success,
+                ),
               ),
             );
+            Text('Password reset email sent to ${state.email}');
 
             Future.delayed(const Duration(seconds: 2), () {
               if (context.mounted) {
@@ -56,9 +76,10 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
           }
         },
         builder: (context, state) {
-          if (state is AuthLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          final isLoading = state is ResetPasswordLoading;
+          // if (state is AuthLoading) {
+          //   return const Center(child: CircularProgressIndicator());
+          // }
           return SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -96,14 +117,19 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
                         validator: AuthValidator.validateEmail,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.done,
+                        enabled: !isLoading,
                       ),
 
                       const SizedBox(height: 30),
 
                       MyButton(
-                        onTap: _onResetPasswordPressed,
-                        title: 'Reset Password',
+                        onTap: isLoading ? null : _onResetPasswordPressed,
+                        title: isLoading ? 'Sending...' : 'Reset Password',
                       ),
+                      if (isLoading) ...[
+                        const SizedBox(height: 20),
+                        const CircularProgressIndicator(),
+                      ],
                     ],
                   ),
                 ),
