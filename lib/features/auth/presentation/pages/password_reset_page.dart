@@ -66,7 +66,6 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
                 ),
               ),
             );
-            Text('Password reset email sent to ${state.email}');
 
             Future.delayed(const Duration(seconds: 2), () {
               if (context.mounted) {
