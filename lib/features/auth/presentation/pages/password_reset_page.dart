@@ -77,9 +77,7 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
         },
         builder: (context, state) {
           final isLoading = state is ResetPasswordLoading;
-          // if (state is AuthLoading) {
-          //   return const Center(child: CircularProgressIndicator());
-          // }
+
           return SafeArea(
             child: Center(
               child: SingleChildScrollView(
