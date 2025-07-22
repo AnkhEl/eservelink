@@ -48,10 +48,23 @@ class SignOutEvent extends AuthEvent {
   const SignOutEvent();
 }
 
+class ResetPasswordEvent extends AuthEvent {
+  final String email;
+
+  const ResetPasswordEvent({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}
+
 class ShowLoginPageEvent extends AuthEvent {
   const ShowLoginPageEvent();
 }
 
 class ShowRegisterPageEvent extends AuthEvent {
   const ShowRegisterPageEvent();
+}
+
+class ShowResetPasswordPageEvent extends AuthEvent {
+  const ShowResetPasswordPageEvent();
 }

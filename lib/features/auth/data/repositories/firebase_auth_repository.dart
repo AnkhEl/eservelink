@@ -158,4 +158,18 @@ class FirebaseAuthRepository implements AuthRepository {
         return 'An unknown error occurred.';
     }
   }
+
+  @override
+  Future<Either<Failure, void>> resetPassword({required String email}) async {
+    try {
+      await firebaseAuth.sendPasswordResetEmail(email: email);
+      return const Right(null);
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      return Left(ServerFailure(_mapFirebaseAuthError(e.code)));
+    } catch (e) {
+      return Left(
+        ServerFailure('Failed to send password reset email: ${e.toString()}'),
+      );
+    }
+  }
 }

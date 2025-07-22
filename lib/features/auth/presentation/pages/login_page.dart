@@ -110,7 +110,10 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             SizedBox(width: 4),
                             GestureDetector(
-                              onTap: () {},
+                              onTap:
+                                  () => context.read<AuthBloc>().add(
+                                    ShowResetPasswordPageEvent(),
+                                  ),
                               child: Text(
                                 'Reset',
                                 style: TextStyle(

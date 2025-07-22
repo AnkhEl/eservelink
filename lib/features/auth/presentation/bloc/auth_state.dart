@@ -37,3 +37,29 @@ class AuthShowLogin extends AuthState {
 class AuthShowRegister extends AuthState {
   const AuthShowRegister();
 }
+
+class AuthShowPasswordReset extends AuthState {
+  const AuthShowPasswordReset();
+}
+
+class ResetPasswordLoading extends AuthState {
+  const ResetPasswordLoading();
+}
+
+class ResetPasswordSuccess extends AuthState {
+  final String email;
+
+  const ResetPasswordSuccess({required this.email});
+
+  @override
+  List<Object?> get props => [email];
+}
+
+class ResetPasswordFailure extends AuthState {
+  final String message;
+
+  const ResetPasswordFailure({required this.message});
+
+  @override
+  List<Object?> get props => [message];
+}

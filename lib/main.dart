@@ -1,5 +1,6 @@
 import 'package:eservelink/features/auth/domain/usecases/get_current_user.dart';
 import 'package:eservelink/features/auth/domain/usecases/register_with_email.dart';
+import 'package:eservelink/features/auth/domain/usecases/reset_password.dart';
 import 'package:eservelink/features/auth/domain/usecases/sign_in_with_apple.dart';
 import 'package:eservelink/features/auth/domain/usecases/sign_in_with_email.dart';
 import 'package:eservelink/features/auth/domain/usecases/sign_in_with_google.dart';
@@ -42,6 +43,7 @@ class MyApp extends StatelessWidget {
               signInWithApple: di.sl<SignInWithApple>(),
               getCurrentUser: di.sl<GetCurrentUser>(),
               signOut: di.sl<SignOut>(),
+              resetPassword: di.sl<ResetPassword>(),
             );
 
             if (isOnboarded) {

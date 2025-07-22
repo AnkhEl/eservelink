@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:eservelink/core/usecases/usecase.dart';
 import 'package:eservelink/features/auth/domain/entities/user_entity.dart';
 import 'package:eservelink/features/auth/domain/usecases/get_current_user.dart';
+import 'package:eservelink/features/auth/domain/usecases/reset_password.dart';
 import 'package:eservelink/features/auth/domain/usecases/sign_in_with_apple.dart';
 import 'package:eservelink/features/auth/domain/usecases/sign_in_with_email.dart';
 import 'package:eservelink/features/auth/domain/usecases/sign_in_with_google.dart';
@@ -19,6 +20,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignInWithApple signInWithApple;
   final GetCurrentUser getCurrentUser;
   final SignOut signOut;
+  final ResetPassword resetPassword;
 
   AuthBloc({
     required this.registerWithEmail,
@@ -27,6 +29,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.signInWithApple,
     required this.getCurrentUser,
     required this.signOut,
+    required this.resetPassword,
   }) : super(AuthInitial()) {
     on<RegisterWithEmailEvent>(_onRegisterWithEmail);
     on<SignInWithEmailEvent>(_onSignInWithEmail);
@@ -34,8 +37,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignInWithAppleEvent>(_onSignInWithApple);
     on<GetCurrentUserEvent>(_onGetCurrentUser);
     on<SignOutEvent>(_onSignOut);
+    on<ResetPasswordEvent>(_onResetPasswordEvent);
     on<ShowLoginPageEvent>(_onShowLoginPage);
     on<ShowRegisterPageEvent>(_onShowRegisterPage);
+    on<ShowResetPasswordPageEvent>(_onShowResetPasswordPage);
   }
 
   Future<void> _onSignInWithEmail(
@@ -145,5 +150,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) {
     emit(const AuthShowRegister());
+  }
+
+  FutureOr<void> _onShowResetPasswordPage(
+    ShowResetPasswordPageEvent event,
+    Emitter<AuthState> emit,
+  ) {
+    emit(const AuthShowPasswordReset());
+  }
+
+  FutureOr<void> _onResetPasswordEvent(
+    ResetPasswordEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(ResetPasswordLoading());
+
+    final result = await resetPassword(ResetPasswordParams(email: event.email));
+    result.fold(
+      (failure) => emit(ResetPasswordFailure(message: failure.message)),
+      (_) => emit(ResetPasswordSuccess(email: event.email)),
+    );
   }
 }

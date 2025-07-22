@@ -1,3 +1,4 @@
+import 'package:eservelink/features/auth/presentation/pages/password_reset_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -49,6 +50,14 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         if (state is AuthShowLogin) {
           return const LoginPage();
+        }
+
+        if (state is AuthShowPasswordReset) {
+          return PasswordResetPage();
+        }
+
+        if (state is ResetPasswordSuccess) {
+          return PasswordResetPage();
         }
 
         if (state is AuthFailure) {
