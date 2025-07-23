@@ -19,7 +19,9 @@ class SnackBarUtils {
     );
   }
 
-  // Convenience methods for common types
+  ///
+  /// A SnackBar widget denoting a success Message
+  ///
   static SnackBar success({required String title, required String message}) {
     return createAwesome(
       title: title,
@@ -28,6 +30,9 @@ class SnackBarUtils {
     );
   }
 
+  ///
+  /// A SnackBar widget denoting a failure/error Message
+  ///
   static SnackBar error({required String title, required String message}) {
     return createAwesome(
       title: title,
@@ -36,6 +41,9 @@ class SnackBarUtils {
     );
   }
 
+  ///
+  /// A SnackBar widget denoting a warning Message
+  ///
   static SnackBar warning({required String title, required String message}) {
     return createAwesome(
       title: title,
@@ -44,6 +52,9 @@ class SnackBarUtils {
     );
   }
 
+  ///
+  /// A SnackBar widget denoting an info Message
+  ///
   static SnackBar info({required String title, required String message}) {
     return createAwesome(
       title: title,

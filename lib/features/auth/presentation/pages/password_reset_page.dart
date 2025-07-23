@@ -1,5 +1,5 @@
-import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:eservelink/core/util/auth_validator.dart';
+import 'package:eservelink/core/util/snack_bar_util.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_event.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_state.dart';
@@ -42,32 +42,17 @@ class _PasswordResetPageState extends State<PasswordResetPage> {
         listener: (context, state) {
           if (state is ResetPasswordFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                elevation: 0,
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: Colors.transparent,
-                content: AwesomeSnackbarContent(
-                  title: "Oops",
-                  message: state.message,
-                  contentType: ContentType.failure,
-                ),
-              ),
+              SnackBarUtils.error(title: 'Oops', message: state.message),
             );
           } else if (state is ResetPasswordSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                elevation: 0,
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: Colors.transparent,
-                content: AwesomeSnackbarContent(
-                  title: "Sent",
-                  message: 'Password reset email sent to ${state.email}',
-                  contentType: ContentType.success,
-                ),
+              SnackBarUtils.success(
+                title: 'Sent',
+                message: 'Password reset email sent to ${state.email}',
               ),
             );
 
-            Future.delayed(const Duration(seconds: 2), () {
+            Future.delayed(const Duration(seconds: 3), () {
               if (context.mounted) {
                 context.read<AuthBloc>().add(ShowLoginPageEvent());
               }
