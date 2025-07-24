@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:eservelink/core/usecases/usecase.dart';
 import 'package:eservelink/features/auth/domain/entities/user_entity.dart';
+import 'package:eservelink/features/auth/domain/usecases/check_email_verification.dart';
 import 'package:eservelink/features/auth/domain/usecases/get_current_user.dart';
 import 'package:eservelink/features/auth/domain/usecases/reset_password.dart';
+import 'package:eservelink/features/auth/domain/usecases/send_email_verification.dart';
 import 'package:eservelink/features/auth/domain/usecases/sign_in_with_apple.dart';
 import 'package:eservelink/features/auth/domain/usecases/sign_in_with_email.dart';
 import 'package:eservelink/features/auth/domain/usecases/sign_in_with_google.dart';
@@ -21,6 +23,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GetCurrentUser getCurrentUser;
   final SignOut signOut;
   final ResetPassword resetPassword;
+  final SendEmailVerification sendEmailVerification;
+  final CheckEmailVerification checkEmailVerification;
 
   AuthBloc({
     required this.registerWithEmail,
@@ -30,6 +34,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.getCurrentUser,
     required this.signOut,
     required this.resetPassword,
+    required this.sendEmailVerification,
+    required this.checkEmailVerification,
   }) : super(AuthInitial()) {
     on<RegisterWithEmailEvent>(_onRegisterWithEmail);
     on<SignInWithEmailEvent>(_onSignInWithEmail);
@@ -41,6 +47,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<ShowLoginPageEvent>(_onShowLoginPage);
     on<ShowRegisterPageEvent>(_onShowRegisterPage);
     on<ShowResetPasswordPageEvent>(_onShowResetPasswordPage);
+    on<SendEmailVerificationEvent>(_onSendEmailVerification);
+    on<CheckEmailVerificationEvent>(_onCheckEmailVerification);
   }
 
   Future<void> _onSignInWithEmail(
@@ -111,13 +119,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     final result = await getCurrentUser(NoParams());
 
-    result.fold((failure) => emit(AuthInitial()), (user) {
-      if (user != null) {
-        emit(AuthSuccess(user));
-      } else {
-        emit(AuthInitial());
-      }
-    });
+    result.fold(
+      (failure) => emit(AuthInitial()),
+      (user) => emitIfUserNotNull(user, emit),
+    );
   }
 
   Future<void> _onSignOut(SignOutEvent event, Emitter<AuthState> emit) async {
@@ -132,7 +137,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   void emitIfUserNotNull(UserEntity? user, Emitter<AuthState> emit) {
     if (user != null) {
-      emit(AuthSuccess(user));
+      if (user.emailVerified == false) {
+        emit(AuthEmailNotVerified(user));
+      } else {
+        emit(AuthSuccess(user));
+      }
     } else {
       emit(const AuthFailure('Register or login to continue'));
     }
@@ -169,6 +178,40 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) => emit(ResetPasswordFailure(message: failure.message)),
       (_) => emit(ResetPasswordSuccess(email: event.email)),
+    );
+  }
+
+  Future<void> _onSendEmailVerification(
+    SendEmailVerificationEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(EmailVerificationLoading());
+
+    final result = await sendEmailVerification(NoParams());
+    result.fold(
+      (failure) => emit(EmailVerificationFailure(message: failure.message)),
+      (_) => emit(EmailVerificationSent(event.email)),
+    );
+  }
+
+  FutureOr<void> _onCheckEmailVerification(
+    CheckEmailVerificationEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const EmailVerificationLoading());
+
+    final result = await checkEmailVerification(NoParams());
+    result.fold(
+      (failure) => emit(EmailVerificationFailure(message: failure.message)),
+      (isVerified) {
+        if (isVerified) {
+          // Get current user and emit success
+          add(const GetCurrentUserEvent());
+        } else {
+          // Still not verified
+          emit(EmailVerificationFailure(message: 'Email not yet verified'));
+        }
+      },
     );
   }
 }

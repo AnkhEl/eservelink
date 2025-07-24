@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eservelink/features/auth/data/repositories/user_repository_impl.dart';
 import 'package:eservelink/features/auth/domain/repositories/user_repository.dart';
+import 'package:eservelink/features/auth/domain/usecases/check_email_verification.dart';
 import 'package:eservelink/features/auth/domain/usecases/reset_password.dart';
+import 'package:eservelink/features/auth/domain/usecases/send_email_verification.dart';
 import 'package:get_it/get_it.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -45,6 +47,12 @@ Future<void> init() async {
   sl.registerLazySingleton<GetCurrentUser>(() => GetCurrentUser(sl()));
   sl.registerLazySingleton<SignOut>(() => SignOut(sl()));
   sl.registerLazySingleton<ResetPassword>(() => ResetPassword(sl()));
+  sl.registerLazySingleton<CheckEmailVerification>(
+    () => CheckEmailVerification(sl()),
+  );
+  sl.registerLazySingleton<SendEmailVerification>(
+    () => SendEmailVerification(sl()),
+  );
 
   // TODO: Add other core service registrations (like network checker, local storage, etc.) here as needed
 }

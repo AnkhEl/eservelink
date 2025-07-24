@@ -1,6 +1,8 @@
+import 'package:eservelink/features/auth/domain/usecases/check_email_verification.dart';
 import 'package:eservelink/features/auth/domain/usecases/get_current_user.dart';
 import 'package:eservelink/features/auth/domain/usecases/register_with_email.dart';
 import 'package:eservelink/features/auth/domain/usecases/reset_password.dart';
+import 'package:eservelink/features/auth/domain/usecases/send_email_verification.dart';
 import 'package:eservelink/features/auth/domain/usecases/sign_in_with_apple.dart';
 import 'package:eservelink/features/auth/domain/usecases/sign_in_with_email.dart';
 import 'package:eservelink/features/auth/domain/usecases/sign_in_with_google.dart';
@@ -44,6 +46,8 @@ class MyApp extends StatelessWidget {
               getCurrentUser: di.sl<GetCurrentUser>(),
               signOut: di.sl<SignOut>(),
               resetPassword: di.sl<ResetPassword>(),
+              checkEmailVerification: di.sl<CheckEmailVerification>(),
+              sendEmailVerification: di.sl<SendEmailVerification>(),
             );
 
             if (isOnboarded) {

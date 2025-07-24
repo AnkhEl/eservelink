@@ -63,3 +63,35 @@ class ResetPasswordFailure extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+// Email verification states
+class AuthEmailNotVerified extends AuthState {
+  final UserEntity user;
+
+  const AuthEmailNotVerified(this.user);
+
+  @override
+  List<Object> get props => [user];
+}
+
+class EmailVerificationSent extends AuthState {
+  final String email;
+
+  const EmailVerificationSent(this.email);
+
+  @override
+  List<Object> get props => [email];
+}
+
+class EmailVerificationLoading extends AuthState {
+  const EmailVerificationLoading();
+}
+
+class EmailVerificationFailure extends AuthState {
+  final String message;
+
+  const EmailVerificationFailure({required this.message});
+
+  @override
+  List<Object> get props => [message];
+}

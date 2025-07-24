@@ -1,3 +1,4 @@
+import 'package:eservelink/features/auth/presentation/pages/email_verification_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/password_reset_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/register_page.dart';
 import 'package:flutter/material.dart';
@@ -70,6 +71,22 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         if (state is ResetPasswordFailure) {
           return const PasswordResetPage();
+        }
+
+        if (state is EmailVerificationSent) {
+          return EmailVerificationPage(email: state.email);
+        }
+
+        if (state is EmailVerificationLoading) {
+          return const EmailVerificationPage();
+        }
+
+        if (state is EmailVerificationFailure) {
+          return const EmailVerificationPage();
+        }
+
+        if (state is AuthEmailNotVerified) {
+          return EmailVerificationPage(email: state.user.email);
         }
 
         if (state is AuthFailure) {

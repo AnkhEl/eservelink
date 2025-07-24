@@ -24,10 +24,11 @@ class FirebaseAuthRepository implements AuthRepository {
     if (user == null) return null;
     return UserEntity(
       uid: user.uid,
-      email: user.email,
+      email: user.email!,
       displayName: user.displayName,
       photoUrl: user.photoURL ?? "",
       role: 'customer',
+      emailVerified: user.emailVerified,
     );
   }
 
@@ -59,8 +60,9 @@ class FirebaseAuthRepository implements AuthRepository {
         password: password,
       );
 
-      await creds.user?.updateDisplayName(name);
-      await creds.user?.reload(); // Ensure the changes reflect
+      await creds.user!.updateDisplayName(name);
+      await creds.user!.reload(); // Ensure the changes reflect
+      await creds.user!.sendEmailVerification();
       final updatedUser = firebaseAuth.currentUser;
       final updatedUserEntity = _userFromFirebaseUser(updatedUser);
       await userRepository.saveUserIfNotExists(updatedUserEntity!);
@@ -138,9 +140,28 @@ class FirebaseAuthRepository implements AuthRepository {
   }
 
   @override
+  @override
   Future<Either<Failure, UserEntity?>> getCurrentUser() async {
     try {
-      return Right(_userFromFirebaseUser(firebaseAuth.currentUser));
+      final firebaseUser = firebaseAuth.currentUser;
+
+      if (firebaseUser != null) {
+        try {
+          await firebaseUser.reload();
+          final refreshedUser = firebaseAuth.currentUser;
+
+          final userToUse = refreshedUser ?? firebaseUser;
+
+          final userEntity = _userFromFirebaseUser(userToUse);
+
+          return Right(userEntity);
+        } catch (reloadError) {
+          final userEntity = _userFromFirebaseUser(firebaseUser);
+          return Right(userEntity);
+        }
+      }
+
+      return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -170,6 +191,37 @@ class FirebaseAuthRepository implements AuthRepository {
       return Left(
         ServerFailure('Failed to send password reset email: ${e.toString()}'),
       );
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> checkEmailVerification() async {
+    try {
+      final user = firebaseAuth.currentUser;
+      if (user != null) {
+        await user.reload();
+        final refreshedUser = firebaseAuth.currentUser;
+        return Right(refreshedUser?.emailVerified ?? false);
+      }
+      return const Left(ServerFailure('No user found'));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> sendEmailVerification() async {
+    try {
+      final user = firebaseAuth.currentUser;
+      if (user != null && !user.emailVerified) {
+        await user.sendEmailVerification();
+        return const Right(null);
+      }
+      return const Left(
+        ServerFailure('No user found or email already verified'),
+      );
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
     }
   }
 }

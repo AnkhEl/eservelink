@@ -24,6 +24,7 @@ class UserRepositoryImpl implements UserRepository {
           displayName: user.displayName,
           photoUrl: user.photoUrl,
           role: user.role,
+          emailVerified: user.emailVerified,
         );
         await docRef.set(userModel.toMap());
       }

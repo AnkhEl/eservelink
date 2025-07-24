@@ -68,3 +68,21 @@ class ShowRegisterPageEvent extends AuthEvent {
 class ShowResetPasswordPageEvent extends AuthEvent {
   const ShowResetPasswordPageEvent();
 }
+
+//Email verification events
+
+class SendEmailVerificationEvent extends AuthEvent {
+  final String email;
+
+  const SendEmailVerificationEvent({required this.email});
+
+  @override
+  List<Object> get props => [];
+}
+
+class CheckEmailVerificationEvent extends AuthEvent {
+  const CheckEmailVerificationEvent();
+
+  @override
+  List<Object> get props => [];
+}

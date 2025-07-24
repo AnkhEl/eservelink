@@ -4,7 +4,8 @@ class UserModel extends UserEntity {
   UserModel({
     required super.uid,
     required super.role,
-    super.email,
+    required super.emailVerified,
+    required super.email,
     super.displayName,
     super.photoUrl,
   });
@@ -16,6 +17,7 @@ class UserModel extends UserEntity {
       email: map['email'],
       displayName: map['displayName'],
       photoUrl: map['photoUrl'],
+      emailVerified: map['emailVerified'],
     );
   }
 
@@ -26,6 +28,7 @@ class UserModel extends UserEntity {
       'email': email,
       'displayName': displayName,
       'photoUrl': photoUrl,
+      'emailVerified': emailVerified,
     };
   }
 }
