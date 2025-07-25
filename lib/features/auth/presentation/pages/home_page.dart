@@ -16,7 +16,7 @@ class HomePage extends StatelessWidget {
             onPressed: () {
               context.read<AuthBloc>().add(const SignOutEvent());
             },
-            icon: Icon(Icons.logout),
+            icon: Icon(Icons.logout, size: 30, color: Colors.black),
           ),
         ],
       ),

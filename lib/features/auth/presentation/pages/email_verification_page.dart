@@ -1,3 +1,4 @@
+import 'package:eservelink/features/auth/presentation/components/my_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
@@ -16,6 +17,7 @@ class EmailVerificationPage extends StatefulWidget {
 
 class _EmailVerificationPageState extends State<EmailVerificationPage> {
   String? _displayEmail;
+  bool _isSendingEmail = false;
 
   @override
   void initState() {
@@ -32,17 +34,11 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Verify Email'),
         backgroundColor: Colors.grey[300],
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed:
-              () => context.read<AuthBloc>().add(const ShowLoginPageEvent()),
-        ),
         actions: [
-          TextButton(
+          IconButton(
             onPressed: () => context.read<AuthBloc>().add(const SignOutEvent()),
-            child: const Text('Sign Out'),
+            icon: const Icon(Icons.logout, size: 30, color: Colors.black),
           ),
         ],
       ),
@@ -62,6 +58,16 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
             }
           }
 
+          // Reset loading flags when operations complete
+          if (state is EmailVerificationFailure ||
+              state is EmailVerificationSent ||
+              state is AuthSuccess ||
+              state is AuthEmailNotVerified) {
+            setState(() {
+              _isSendingEmail = false;
+            });
+          }
+
           if (state is EmailVerificationFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBarUtils.error(title: "Error", message: state.message),
@@ -77,6 +83,8 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         },
         builder: (context, state) {
           final isLoading = state is EmailVerificationLoading;
+          final isCheckingVerification = isLoading && !_isSendingEmail;
+          final isSendingEmail = isLoading && _isSendingEmail;
 
           return SafeArea(
             child: Center(
@@ -101,8 +109,8 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'We sent a verification email to:',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                        'We have sent you a verification email to:',
+                        style: TextStyle(fontSize: 17, color: Colors.grey[600]),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
@@ -121,31 +129,44 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
-                      ElevatedButton(
-                        onPressed:
-                            isLoading
+                      MyButton(
+                        onTap:
+                            isCheckingVerification
                                 ? null
-                                : () => context.read<AuthBloc>().add(
-                                  const CheckEmailVerificationEvent(),
-                                ),
-                        child: Text(
-                          isLoading ? 'Checking...' : 'I\'ve Verified My Email',
-                        ),
+                                : () {
+                                  context.read<AuthBloc>().add(
+                                    const CheckEmailVerificationEvent(),
+                                  );
+                                },
+                        title:
+                            isCheckingVerification
+                                ? 'Checking...'
+                                : 'I\'ve Verified My Email',
                       ),
+
                       const SizedBox(height: 16),
                       TextButton(
                         onPressed:
-                            isLoading
+                            isLoading && isSendingEmail
                                 ? null
-                                : () => context.read<AuthBloc>().add(
-                                  SendEmailVerificationEvent(
-                                    email: _displayEmail!,
-                                  ),
-                                ),
+                                : () {
+                                  setState(() {
+                                    _isSendingEmail = true;
+                                  });
+                                  context.read<AuthBloc>().add(
+                                    SendEmailVerificationEvent(
+                                      email: _displayEmail!,
+                                    ),
+                                  );
+                                },
                         child: Text(
-                          isLoading
+                          isLoading && isSendingEmail
                               ? 'Sending...'
                               : 'Resend Verification Email',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       if (isLoading) ...[
