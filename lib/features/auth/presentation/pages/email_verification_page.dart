@@ -7,7 +7,7 @@ import 'package:eservelink/features/auth/presentation/bloc/auth_state.dart';
 import 'package:eservelink/core/util/snack_bar_util.dart';
 
 class EmailVerificationPage extends StatefulWidget {
-  final String? email; // Make optional
+  final String? email;
 
   const EmailVerificationPage({super.key, this.email});
 
@@ -24,7 +24,6 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     super.initState();
     _displayEmail = widget.email;
 
-    // If no email provided, get current user to extract email
     if (_displayEmail == null) {
       context.read<AuthBloc>().add(const GetCurrentUserEvent());
     }
@@ -45,7 +44,6 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
       backgroundColor: Colors.grey[300],
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          // Extract email from user states when _displayEmail is null
           if (_displayEmail == null) {
             if (state is AuthEmailNotVerified) {
               setState(() {
