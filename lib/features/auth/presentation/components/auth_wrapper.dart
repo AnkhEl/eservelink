@@ -1,3 +1,4 @@
+import 'package:eservelink/core/util/snack_bar_util.dart';
 import 'package:eservelink/features/auth/presentation/pages/email_verification_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/password_reset_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/register_page.dart';
@@ -23,9 +24,9 @@ class _AuthWrapperState extends State<AuthWrapper> {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthFailure) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBarUtils.error(title: "Oops", message: state.message),
+          );
         }
 
         if (state is AuthShowLogin) {

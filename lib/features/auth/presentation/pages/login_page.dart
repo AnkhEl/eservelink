@@ -1,4 +1,5 @@
 import 'package:eservelink/core/util/auth_validator.dart';
+import 'package:eservelink/core/util/snack_bar_util.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_event.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_state.dart';
@@ -44,13 +45,16 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthFailure) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBarUtils.error(title: "Oops", message: state.message),
+            );
           } else if (state is AuthSuccess) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text("Login Successful")));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBarUtils.success(
+                title: "Success",
+                message: "You have successfully logged in",
+              ),
+            );
           }
         },
         builder: (context, state) {
