@@ -2,12 +2,12 @@ import 'package:eservelink/core/util/snack_bar_util.dart';
 import 'package:eservelink/features/auth/presentation/pages/email_verification_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/password_reset_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/register_page.dart';
+import 'package:eservelink/features/home/presentation/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_state.dart';
 import 'package:eservelink/features/auth/presentation/pages/login_page.dart';
-import 'package:eservelink/features/auth/presentation/pages/home_page.dart';
 
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});

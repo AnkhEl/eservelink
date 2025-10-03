@@ -30,7 +30,7 @@ class HomePage extends StatelessWidget {
 
             return Center(
               child: Text(
-                "Welcome, $userName!",
+                "Welcome, Mr. $userName!",
                 style: const TextStyle(fontSize: 30),
               ),
             );
