@@ -1,11 +1,37 @@
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_event.dart';
-import 'package:eservelink/features/auth/presentation/bloc/auth_state.dart';
+import 'package:eservelink/features/home/presentation/pages/Home.dart';
+import 'package:eservelink/features/history/presentation/pages/history.dart';
+import 'package:eservelink/features/profile/presentation/pages/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  late List<Widget> pages;
+
+  late Home home;
+  late History history;
+  late Profile profile;
+
+  int _currentTabIndex = 0;
+  final GlobalKey<CurvedNavigationBarState> _bottomNavigationKey = GlobalKey();
+
+  @override
+  void initState() {
+    home = Home();
+    history = History();
+    profile = Profile();
+    pages = [home, history, profile];
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,26 +46,24 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          if (state is AuthSuccess) {
-            final userName =
-                state.user.displayName ??
-                state.user.email?.split('@')[0] ??
-                'User';
-
-            return Center(
-              child: Text(
-                "Welcome, Mr. $userName!",
-                style: const TextStyle(fontSize: 30),
-              ),
-            );
-          }
-          return Center(
-            child: Text("Welcome:", style: TextStyle(fontSize: 30)),
-          );
+      bottomNavigationBar: CurvedNavigationBar(
+        key: _bottomNavigationKey,
+        height: 70,
+        backgroundColor: Colors.white,
+        color: Colors.black,
+        animationDuration: Duration(milliseconds: 500),
+        onTap: (int index) {
+          setState(() {
+            _currentTabIndex = index;
+          });
         },
+        items: [
+          Icon(Icons.home, color: Colors.white, size: 30),
+          Icon(Icons.history, color: Colors.white, size: 30),
+          Icon(Icons.person, color: Colors.white, size: 30),
+        ],
       ),
+      body: IndexedStack(index: _currentTabIndex, children: pages),
     );
   }
 }
