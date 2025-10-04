@@ -37,14 +37,14 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: [
-          IconButton(
-            onPressed: () {
-              context.read<AuthBloc>().add(const SignOutEvent());
-            },
-            icon: Icon(Icons.logout, size: 30, color: Colors.black),
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     onPressed: () {
+        //       context.read<AuthBloc>().add(const SignOutEvent());
+        //     },
+        //     icon: Icon(Icons.logout, size: 30, color: Colors.black),
+        //   ),
+        // ],
       ),
       bottomNavigationBar: CurvedNavigationBar(
         key: _bottomNavigationKey,
