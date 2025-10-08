@@ -64,6 +64,16 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: IndexedStack(index: _currentTabIndex, children: pages),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child:
+            _currentTabIndex == 0
+                ? FloatingActionButton(
+                  onPressed: () {},
+                  child: Icon(Icons.qr_code),
+                )
+                : null,
+      ),
     );
   }
 }
