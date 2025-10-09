@@ -25,6 +25,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
   @override
   void dispose() {
     cameraController?.dispose();
+    cameraController = null;
     super.dispose();
   }
 
@@ -59,8 +60,6 @@ class _QrScannerPageState extends State<QrScannerPage> {
               context,
             ).showSnackBar(SnackBar(content: Text(state.message)));
             Navigator.pop(context);
-          } else if (state is QrScannerPermissionGranted) {
-            cameraController = MobileScannerController();
           }
         },
         builder: (context, state) {
@@ -70,6 +69,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
 
           if (state is QrScannerPermissionGranted ||
               state is QrScannerSuccess) {
+            cameraController ??= MobileScannerController();
             return Stack(
               children: [
                 MobileScanner(
