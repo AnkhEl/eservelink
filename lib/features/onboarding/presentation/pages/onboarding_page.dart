@@ -1,4 +1,5 @@
 import 'package:eservelink/core/constants/app_colors.dart';
+import 'package:eservelink/features/auth/presentation/components/auth_wrapper.dart';
 import 'package:eservelink/features/auth/presentation/pages/login_page.dart';
 import 'package:eservelink/features/onboarding/data/datasources/onboarding_pages_local_datasource.dart';
 import 'package:eservelink/features/onboarding/domain/entities/onboarding_info.dart';
@@ -114,7 +115,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
+      MaterialPageRoute(builder: (context) => AuthWrapper()),
     );
   }
 

@@ -99,8 +99,8 @@ class _HomeState extends State<Home> {
               ],
             );
           }
-          return Center(
-            child: Text("Welcome:", style: TextStyle(fontSize: 30)),
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
           );
         },
       ),

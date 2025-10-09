@@ -35,28 +35,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('🎪 MyApp build called');
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>(
-          create: (_) {
-            final authBloc = AuthBloc(
-              registerWithEmail: di.sl<RegisterWithEmail>(),
-              signInWithEmail: di.sl<SignInWithEmail>(),
-              signInWithGoogle: di.sl<SignInWithGoogle>(),
-              signInWithApple: di.sl<SignInWithApple>(),
-              getCurrentUser: di.sl<GetCurrentUser>(),
-              signOut: di.sl<SignOut>(),
-              resetPassword: di.sl<ResetPassword>(),
-              checkEmailVerification: di.sl<CheckEmailVerification>(),
-              sendEmailVerification: di.sl<SendEmailVerification>(),
-            );
-
-            if (isOnboarded) {
-              authBloc.add(const GetCurrentUserEvent());
-            }
-
-            return authBloc;
-          },
+          create:
+              (_) => AuthBloc(
+                registerWithEmail: di.sl<RegisterWithEmail>(),
+                signInWithEmail: di.sl<SignInWithEmail>(),
+                signInWithGoogle: di.sl<SignInWithGoogle>(),
+                signInWithApple: di.sl<SignInWithApple>(),
+                getCurrentUser: di.sl<GetCurrentUser>(),
+                signOut: di.sl<SignOut>(),
+                resetPassword: di.sl<ResetPassword>(),
+                checkEmailVerification: di.sl<CheckEmailVerification>(),
+                sendEmailVerification: di.sl<SendEmailVerification>(),
+              ),
         ),
         BlocProvider<QrScannerBloc>(
           create: (_) => QrScannerBloc(repository: di.sl()),

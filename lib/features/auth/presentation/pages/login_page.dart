@@ -42,183 +42,157 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[300],
-      body: BlocConsumer<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is AuthFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBarUtils.error(title: "Oops", message: state.message),
-            );
-          } else if (state is AuthSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBarUtils.success(
-                title: "Success",
-                message: "You have successfully logged in",
-              ),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is AuthLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                child: Form(
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  key: _formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 50),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Form(
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 50),
 
-                      // logo
-                      const Icon(Icons.lock, size: 100),
+                  // logo
+                  const Icon(Icons.lock, size: 100),
 
-                      const SizedBox(height: 50),
+                  const SizedBox(height: 50),
 
-                      Text(
-                        'Welcome back, You\'ve been missed!',
-                        style: TextStyle(color: Colors.grey[700], fontSize: 16),
-                      ),
+                  Text(
+                    'Welcome back, You\'ve been missed!',
+                    style: TextStyle(color: Colors.grey[700], fontSize: 16),
+                  ),
 
-                      const SizedBox(height: 25),
+                  const SizedBox(height: 25),
 
-                      MyTextField(
-                        controller: _emailController,
-                        hintText: 'Email',
-                        obscureText: false,
-                        validator: AuthValidator.validateEmail,
-                        keyboardType: TextInputType.emailAddress,
-                        textInputAction: TextInputAction.next,
-                      ),
+                  MyTextField(
+                    controller: _emailController,
+                    hintText: 'Email',
+                    obscureText: false,
+                    validator: AuthValidator.validateEmail,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                  ),
 
-                      const SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
-                      MyTextField(
-                        controller: _passwordController,
-                        hintText: 'Password',
-                        obscureText: true,
-                        validator: AuthValidator.validatePassword,
-                        textInputAction: TextInputAction.next,
-                      ),
-                      SizedBox(height: 15),
-                      Container(
-                        margin: EdgeInsets.symmetric(horizontal: 25),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Forgot password?",
-                              style: TextStyle(color: Colors.grey[700]),
-                            ),
-                            SizedBox(width: 4),
-                            GestureDetector(
-                              onTap:
-                                  () => context.read<AuthBloc>().add(
-                                    ShowResetPasswordPageEvent(),
-                                  ),
-                              child: Text(
-                                'Reset',
-                                style: TextStyle(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
+                  MyTextField(
+                    controller: _passwordController,
+                    hintText: 'Password',
+                    obscureText: true,
+                    validator: AuthValidator.validatePassword,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  SizedBox(height: 15),
+                  Container(
+                    margin: EdgeInsets.symmetric(horizontal: 25),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          "Forgot password?",
+                          style: TextStyle(color: Colors.grey[700]),
                         ),
-                      ),
-
-                      const SizedBox(height: 30),
-
-                      MyButton(onTap: _onSignInPressed, title: 'Sign In'),
-
-                      const SizedBox(height: 30),
-
-                      // or continue with
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Divider(
-                                thickness: 0.5,
-                                color: Colors.grey[400],
+                        SizedBox(width: 4),
+                        GestureDetector(
+                          onTap:
+                              () => context.read<AuthBloc>().add(
+                                ShowResetPasswordPageEvent(),
                               ),
+                          child: Text(
+                            'Reset',
+                            style: TextStyle(
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
                             ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10.0,
-                              ),
-                              child: Text(
-                                'Or continue with',
-                                style: TextStyle(color: Colors.grey[700]),
-                              ),
-                            ),
-                            Expanded(
-                              child: Divider(
-                                thickness: 0.5,
-                                color: Colors.grey[400],
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
+                    ),
+                  ),
 
-                      const SizedBox(height: 50),
+                  const SizedBox(height: 30),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // google button
-                          SquareTile(
-                            imagePath: 'assets/google.png',
-                            onTap: _onGoogleSignInPressed,
+                  MyButton(onTap: _onSignInPressed, title: 'Sign In'),
+
+                  const SizedBox(height: 30),
+
+                  // or continue with
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            thickness: 0.5,
+                            color: Colors.grey[400],
                           ),
-
-                          SizedBox(width: 25),
-
-                          // apple button
-                          SquareTile(
-                            imagePath: 'assets/apple.png',
-                            onTap: () {},
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'Not a member?',
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                          child: Text(
+                            'Or continue with',
                             style: TextStyle(color: Colors.grey[700]),
                           ),
-                          const SizedBox(width: 4),
-                          GestureDetector(
-                            onTap:
-                                () => context.read<AuthBloc>().add(
-                                  ShowRegisterPageEvent(),
-                                ),
-                            child: Text(
-                              'Register',
-                              style: TextStyle(
-                                color: Colors.blue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            thickness: 0.5,
+                            color: Colors.grey[400],
                           ),
-                        ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 50),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // google button
+                      SquareTile(
+                        imagePath: 'assets/google.png',
+                        onTap: _onGoogleSignInPressed,
+                      ),
+
+                      SizedBox(width: 25),
+
+                      // apple button
+                      SquareTile(imagePath: 'assets/apple.png', onTap: () {}),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Not a member?',
+                        style: TextStyle(color: Colors.grey[700]),
+                      ),
+                      const SizedBox(width: 4),
+                      GestureDetector(
+                        onTap:
+                            () => context.read<AuthBloc>().add(
+                              ShowRegisterPageEvent(),
+                            ),
+                        child: Text(
+                          'Register',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

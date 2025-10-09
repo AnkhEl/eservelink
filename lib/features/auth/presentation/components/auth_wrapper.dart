@@ -1,4 +1,5 @@
 import 'package:eservelink/core/util/snack_bar_util.dart';
+import 'package:eservelink/features/auth/presentation/bloc/auth_event.dart';
 import 'package:eservelink/features/auth/presentation/pages/email_verification_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/password_reset_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/register_page.dart';
@@ -20,6 +21,18 @@ class _AuthWrapperState extends State<AuthWrapper> {
   bool _isOnRegisterPage = false;
 
   @override
+  void initState() {
+    super.initState();
+    // Check if user is already logged in when wrapper initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final currentState = context.read<AuthBloc>().state;
+      if (currentState is! AuthSuccess) {
+        context.read<AuthBloc>().add(const GetCurrentUserEvent());
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
@@ -33,6 +46,14 @@ class _AuthWrapperState extends State<AuthWrapper> {
           _isOnRegisterPage = false;
         } else if (state is AuthShowRegister) {
           _isOnRegisterPage = true;
+        } else if (state is AuthSuccess) {
+          // Show success snackbar when navigating to home
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBarUtils.success(
+              title: "Success",
+              message: "You have successfully logged in",
+            ),
+          );
         }
       },
       builder: (context, state) {
