@@ -1,9 +1,13 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:eservelink/core/util/injection_container.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_event.dart';
 import 'package:eservelink/features/home/presentation/pages/Home.dart';
 import 'package:eservelink/features/history/presentation/pages/history.dart';
 import 'package:eservelink/features/profile/presentation/pages/profile.dart';
+import 'package:eservelink/features/qr_scanner/data/repositories/qr_scanner_repository_impl.dart';
+import 'package:eservelink/features/qr_scanner/presentation/bloc/qr_scanner_bloc.dart';
+import 'package:eservelink/features/qr_scanner/presentation/pages/qr_scanner_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -69,8 +73,21 @@ class _HomePageState extends State<HomePage> {
         child:
             _currentTabIndex == 0
                 ? FloatingActionButton(
-                  onPressed: () {},
-                  child: Icon(Icons.qr_code),
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const QrScannerPage(),
+                      ),
+                    );
+
+                    if (result != null && mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Scanned: $result')),
+                      );
+                    }
+                  },
+                  child: const Icon(Icons.qr_code),
                 )
                 : null,
       ),

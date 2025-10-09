@@ -14,3 +14,7 @@ class CacheFailure extends Failure {
 class UnexpectedFailure extends Failure {
   const UnexpectedFailure([super.message = 'Unexpected Failure']);
 }
+
+class PermissionFailure extends Failure {
+  const PermissionFailure([super.message = 'Unexpected Failure']);
+}

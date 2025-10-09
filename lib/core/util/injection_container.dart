@@ -4,6 +4,9 @@ import 'package:eservelink/features/auth/domain/repositories/user_repository.dar
 import 'package:eservelink/features/auth/domain/usecases/check_email_verification.dart';
 import 'package:eservelink/features/auth/domain/usecases/reset_password.dart';
 import 'package:eservelink/features/auth/domain/usecases/send_email_verification.dart';
+import 'package:eservelink/features/qr_scanner/data/repositories/qr_scanner_repository_impl.dart';
+import 'package:eservelink/features/qr_scanner/domain/repositories/qr_scanner_repository.dart';
+import 'package:eservelink/features/qr_scanner/domain/usecases/scan_qr_code.dart';
 import 'package:get_it/get_it.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -39,6 +42,10 @@ Future<void> init() async {
     ),
   );
 
+  sl.registerLazySingleton<QrScannerRepository>(
+    () => QrScannerRepositoryImpl(),
+  );
+
   // Use Cases
   sl.registerLazySingleton<SignInWithGoogle>(() => SignInWithGoogle(sl()));
   sl.registerLazySingleton<SignInWithEmail>(() => SignInWithEmail(sl()));
@@ -53,6 +60,8 @@ Future<void> init() async {
   sl.registerLazySingleton<SendEmailVerification>(
     () => SendEmailVerification(sl()),
   );
-
+  sl.registerLazySingleton<ScanQrCode>(
+    () => ScanQrCode(sl<QrScannerRepository>()),
+  );
   // TODO: Add other core service registrations (like network checker, local storage, etc.) here as needed
 }

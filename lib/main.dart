@@ -11,6 +11,7 @@ import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_event.dart';
 import 'package:eservelink/features/auth/presentation/components/auth_wrapper.dart';
 import 'package:eservelink/features/onboarding/presentation/pages/onboarding_page.dart';
+import 'package:eservelink/features/qr_scanner/presentation/bloc/qr_scanner_bloc.dart';
 import 'package:eservelink/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:eservelink/core/util/injection_container.dart' as di;
@@ -56,6 +57,9 @@ class MyApp extends StatelessWidget {
 
             return authBloc;
           },
+        ),
+        BlocProvider<QrScannerBloc>(
+          create: (_) => QrScannerBloc(repository: di.sl()),
         ),
       ],
       child: MaterialApp(
