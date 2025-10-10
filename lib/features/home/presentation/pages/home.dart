@@ -1,4 +1,5 @@
 import 'package:eservelink/core/util/app_styles.dart';
+import 'package:eservelink/features/home/presentation/widgets/restaurant_card.dart';
 import 'package:flutter/material.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_state.dart';
@@ -15,15 +16,15 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 244, 241, 241),
       body: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           if (state is AuthSuccess) {
             final userName =
-                state.user.displayName ??
-                state.user.email.split('@')[0] ??
-                'User';
+                state.user.displayName ?? state.user.email.split('@')[0];
 
             return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Stack(
                   children: [
@@ -95,6 +96,40 @@ class _HomeState extends State<Home> {
                       ),
                     ),
                   ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20, top: 10),
+                  child: Text(
+                    "The most relevant",
+                    style: AppStyles.headingTextStyle(fontSize: 25),
+                  ),
+                ),
+                SizedBox(height: 20),
+                Container(
+                  height: 310,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      RestaurantCard(
+                        imageAsset: 'assets/hotel1.jpg',
+                        restaurantName: 'Hotel Beach',
+                        location: 'Eastgate Mall',
+                        rating: 1,
+                      ),
+                      RestaurantCard(
+                        imageAsset: 'assets/hotel2.jpg',
+                        restaurantName: 'Hotel Beach',
+                        location: 'Eastgate Mall',
+                        rating: 4,
+                      ),
+                      RestaurantCard(
+                        imageAsset: 'assets/hotel3.jpg',
+                        restaurantName: 'Hotel Beach',
+                        location: 'Eastgate Mall',
+                        rating: 2,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             );

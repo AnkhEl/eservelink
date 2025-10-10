@@ -35,7 +35,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('🎪 MyApp build called');
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthBloc>(
