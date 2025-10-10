@@ -19,6 +19,7 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   bool _isOnRegisterPage = false;
+  bool _showSuccessSnackbar = false;
 
   @override
   void initState() {
@@ -44,16 +45,20 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         if (state is AuthShowLogin) {
           _isOnRegisterPage = false;
+          _showSuccessSnackbar = true;
         } else if (state is AuthShowRegister) {
           _isOnRegisterPage = true;
+          _showSuccessSnackbar = false;
         } else if (state is AuthSuccess) {
           // Show success snackbar when navigating to home
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBarUtils.success(
-              title: "Success",
-              message: "You have successfully logged in",
-            ),
-          );
+          if (_showSuccessSnackbar) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBarUtils.success(
+                title: "Success",
+                message: "You have successfully logged in",
+              ),
+            );
+          }
         }
       },
       builder: (context, state) {
