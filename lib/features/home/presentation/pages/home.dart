@@ -66,7 +66,7 @@ class _HomeState extends State<Home> {
               LoadNearbyRestaurantsEvent(
                 latitude: position.latitude,
                 longitude: position.longitude,
-                radiusInKm: 10,
+                radiusInKm: 40,
               ),
             );
           }
@@ -200,7 +200,6 @@ class _HomeState extends State<Home> {
                       ),
                     ),
                     SizedBox(height: 20),
-                    // ===== UPDATED: BlocBuilder to handle split lists =====
                     BlocBuilder<RestaurantBloc, RestaurantState>(
                       builder: (context, restaurantState) {
                         if (restaurantState is RestaurantLoading) {
@@ -261,12 +260,10 @@ class _HomeState extends State<Home> {
                             );
                           }
 
-                          // ===== NEW: Split restaurants into two lists =====
                           final firstFour =
                               restaurantState.restaurants.take(4).toList();
                           final remaining =
                               restaurantState.restaurants.skip(4).toList();
-                          // =================================================
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,7 +288,7 @@ class _HomeState extends State<Home> {
                               ),
                               // ======================================
 
-                              // ===== NEW: Show vertical list if there are more restaurants =====
+                              // ===== NEW: Vertically scrollable list with lazy loading =====
                               if (remaining.isNotEmpty) ...[
                                 Padding(
                                   padding: const EdgeInsets.only(
@@ -306,56 +303,64 @@ class _HomeState extends State<Home> {
                                     ),
                                   ),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                  ),
-                                  child: ListView.builder(
-                                    shrinkWrap: true,
-                                    physics: NeverScrollableScrollPhysics(),
-                                    itemCount: remaining.length,
-                                    itemBuilder: (context, index) {
-                                      final restaurant = remaining[index];
+                                // ===== NEW: Fixed height container for vertical scrolling =====
+                                SizedBox(
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.5,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                    ),
+                                    child: ListView.builder(
+                                      // ===== NEW: Changed to allow independent scrolling =====
+                                      shrinkWrap: false,
+                                      physics: AlwaysScrollableScrollPhysics(),
+                                      // ====================================================
+                                      itemCount: remaining.length,
+                                      itemBuilder: (context, index) {
+                                        final restaurant = remaining[index];
 
-                                      return Card(
-                                        margin: EdgeInsets.only(bottom: 15),
-                                        child: ListTile(
-                                          leading: ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
+                                        return Card(
+                                          margin: EdgeInsets.only(bottom: 15),
+                                          color: Colors.white,
+                                          child: ListTile(
+                                            leading: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              child: Image.asset(
+                                                restaurant.imageUrl,
+                                                width: 60,
+                                                height: 60,
+                                                fit: BoxFit.cover,
+                                              ),
                                             ),
-                                            child: Image.asset(
-                                              restaurant.imageUrl,
-                                              width: 60,
-                                              height: 60,
-                                              fit: BoxFit.cover,
+                                            title: Text(restaurant.name),
+                                            subtitle: Text(restaurant.address),
+                                            trailing: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.star,
+                                                  color: Colors.amber,
+                                                  size: 20,
+                                                ),
+                                                SizedBox(width: 5),
+                                                Text(
+                                                  restaurant.rating
+                                                      .toStringAsFixed(1),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                          title: Text(restaurant.name),
-                                          subtitle: Text(restaurant.address),
-                                          trailing: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                Icons.star,
-                                                color: Colors.amber,
-                                                size: 20,
-                                              ),
-                                              SizedBox(width: 5),
-                                              Text(
-                                                restaurant.rating
-                                                    .toStringAsFixed(1),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
+                                        );
+                                      },
+                                    ),
                                   ),
                                 ),
+                                // =========================================================
                               ],
 
-                              // ================================================================
+                              // ============================================================
                               SizedBox(height: 20),
                             ],
                           );
@@ -372,7 +377,6 @@ class _HomeState extends State<Home> {
                         );
                       },
                     ),
-                    // =====================================================
                   ],
                 ),
               ),
