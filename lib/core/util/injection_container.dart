@@ -4,6 +4,12 @@ import 'package:eservelink/features/auth/domain/repositories/user_repository.dar
 import 'package:eservelink/features/auth/domain/usecases/check_email_verification.dart';
 import 'package:eservelink/features/auth/domain/usecases/reset_password.dart';
 import 'package:eservelink/features/auth/domain/usecases/send_email_verification.dart';
+import 'package:eservelink/features/home/data/datasources/restaurant_remote_data_source.dart';
+import 'package:eservelink/features/home/data/repositories/restaurant_repository_impl.dart';
+import 'package:eservelink/features/home/domain/repositories/restaurant_repository.dart';
+import 'package:eservelink/features/home/domain/usecases/add_restaurant_usecase.dart';
+import 'package:eservelink/features/home/domain/usecases/get_nearby_restaurants_usecase.dart';
+import 'package:eservelink/features/home/domain/usecases/get_restaurant_by_id_usecase.dart';
 import 'package:eservelink/features/qr_scanner/data/repositories/qr_scanner_repository_impl.dart';
 import 'package:eservelink/features/qr_scanner/domain/repositories/qr_scanner_repository.dart';
 import 'package:eservelink/features/qr_scanner/domain/usecases/scan_qr_code.dart';
@@ -29,6 +35,12 @@ Future<void> init() async {
   sl.registerLazySingleton<GoogleSignIn>(() => GoogleSignIn.instance);
   sl.registerLazySingleton<FirebaseFirestore>(() => FirebaseFirestore.instance);
 
+  //datasources
+
+  sl.registerLazySingleton<RestaurantRemoteDataSource>(
+    () => RestaurantRemoteDataSourceImpl(firestore: sl<FirebaseFirestore>()),
+  );
+
   // Repositories
   sl.registerLazySingleton<UserRepository>(
     () => UserRepositoryImpl(firestore: sl<FirebaseFirestore>()),
@@ -44,6 +56,12 @@ Future<void> init() async {
 
   sl.registerLazySingleton<QrScannerRepository>(
     () => QrScannerRepositoryImpl(),
+  );
+
+  sl.registerLazySingleton<RestaurantRepository>(
+    () => RestaurantRepositoryImpl(
+      remoteDataSource: sl<RestaurantRemoteDataSource>(),
+    ),
   );
 
   // Use Cases
@@ -62,6 +80,18 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<ScanQrCode>(
     () => ScanQrCode(sl<QrScannerRepository>()),
+  );
+
+  sl.registerLazySingleton<GetNearbyRestaurantsUseCase>(
+    () => GetNearbyRestaurantsUseCase(repository: sl<RestaurantRepository>()),
+  );
+
+  sl.registerLazySingleton<GetRestaurantByIdUseCase>(
+    () => GetRestaurantByIdUseCase(repository: sl<RestaurantRepository>()),
+  );
+
+  sl.registerLazySingleton<AddRestaurantUseCase>(
+    () => AddRestaurantUseCase(repository: sl<RestaurantRepository>()),
   );
   // TODO: Add other core service registrations (like network checker, local storage, etc.) here as needed
 }

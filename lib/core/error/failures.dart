@@ -18,3 +18,7 @@ class UnexpectedFailure extends Failure {
 class PermissionFailure extends Failure {
   const PermissionFailure([super.message = 'Unexpected Failure']);
 }
+
+class LocationFailure extends Failure {
+  const LocationFailure(super.message);
+}

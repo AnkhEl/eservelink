@@ -10,6 +10,10 @@ import 'package:eservelink/features/auth/domain/usecases/sign_out.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_event.dart';
 import 'package:eservelink/features/auth/presentation/components/auth_wrapper.dart';
+import 'package:eservelink/features/home/domain/usecases/add_restaurant_usecase.dart';
+import 'package:eservelink/features/home/domain/usecases/get_nearby_restaurants_usecase.dart';
+import 'package:eservelink/features/home/domain/usecases/get_restaurant_by_id_usecase.dart';
+import 'package:eservelink/features/home/presentation/bloc/restaurant_bloc.dart';
 import 'package:eservelink/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:eservelink/features/qr_scanner/presentation/bloc/qr_scanner_bloc.dart';
 import 'package:eservelink/firebase_options.dart';
@@ -53,6 +57,15 @@ class MyApp extends StatelessWidget {
         ),
         BlocProvider<QrScannerBloc>(
           create: (_) => QrScannerBloc(repository: di.sl()),
+        ),
+        BlocProvider<RestaurantBloc>(
+          create:
+              (_) => RestaurantBloc(
+                getNearbyRestaurantsUseCase:
+                    di.sl<GetNearbyRestaurantsUseCase>(),
+                getRestaurantByIdUseCase: di.sl<GetRestaurantByIdUseCase>(),
+                addRestaurantUseCase: di.sl<AddRestaurantUseCase>(),
+              ),
         ),
       ],
       child: MaterialApp(
