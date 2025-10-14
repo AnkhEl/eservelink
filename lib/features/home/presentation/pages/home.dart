@@ -1,3 +1,4 @@
+import 'package:card_loading/card_loading.dart';
 import 'package:eservelink/core/services/location_service.dart';
 import 'package:eservelink/core/util/app_styles.dart';
 import 'package:eservelink/features/home/presentation/bloc/restaurant_bloc.dart';
@@ -40,7 +41,6 @@ class _HomeState extends State<Home> {
       },
       (position) async {
         try {
-          // Get address from coordinates using geocoding
           List<Placemark> placemarks = await placemarkFromCoordinates(
             position.latitude,
             position.longitude,
@@ -60,7 +60,6 @@ class _HomeState extends State<Home> {
             });
           }
 
-          // Fetch nearby restaurants
           if (mounted) {
             context.read<RestaurantBloc>().add(
               LoadNearbyRestaurantsEvent(
@@ -76,13 +75,12 @@ class _HomeState extends State<Home> {
             _locationLoading = false;
           });
 
-          // Still try to fetch restaurants even if geocoding fails
           if (mounted) {
             context.read<RestaurantBloc>().add(
               LoadNearbyRestaurantsEvent(
                 latitude: position.latitude,
                 longitude: position.longitude,
-                radiusInKm: 10,
+                radiusInKm: 40,
               ),
             );
           }
@@ -202,12 +200,129 @@ class _HomeState extends State<Home> {
                     SizedBox(height: 20),
                     BlocBuilder<RestaurantBloc, RestaurantState>(
                       builder: (context, restaurantState) {
-                        if (restaurantState is RestaurantLoading) {
-                          return SizedBox(
-                            height: 310,
-                            child: Center(child: CircularProgressIndicator()),
+                        // ===== Show card loaders while getting location =====
+                        if (_locationLoading) {
+                          return Column(
+                            children: [
+                              SizedBox(
+                                height: 310,
+                                child: ListView(
+                                  scrollDirection: Axis.horizontal,
+                                  children: List.generate(
+                                    4,
+                                    (index) => Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                      ),
+                                      child: CardLoading(
+                                        height: 280,
+                                        width: 220,
+                                        borderRadius: BorderRadius.circular(15),
+                                        margin: EdgeInsets.zero,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 30),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 20),
+                                child: Text(
+                                  "Places Near you",
+                                  style: AppStyles.headingTextStyle(
+                                    fontSize: 25,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 15),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                child: Column(
+                                  children: List.generate(
+                                    3,
+                                    (index) => Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 15,
+                                      ),
+                                      child: CardLoading(
+                                        height: 80,
+                                        width: double.infinity,
+                                        borderRadius: BorderRadius.circular(10),
+                                        margin: EdgeInsets.zero,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           );
                         }
+                        // ================================================================
+
+                        // ===== Show card loaders during restaurant loading =====
+                        if (restaurantState is RestaurantLoading) {
+                          return Column(
+                            children: [
+                              // Horizontal card loaders
+                              SizedBox(
+                                height: 310,
+                                child: ListView(
+                                  scrollDirection: Axis.horizontal,
+                                  children: List.generate(
+                                    4,
+                                    (index) => Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                      ),
+                                      child: CardLoading(
+                                        height: 280,
+                                        width: 220,
+                                        borderRadius: BorderRadius.circular(15),
+                                        margin: EdgeInsets.zero,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 30),
+                              Padding(
+                                padding: const EdgeInsets.only(left: 20),
+                                child: Text(
+                                  "Places Near you",
+                                  style: AppStyles.headingTextStyle(
+                                    fontSize: 25,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 15),
+                              // Vertical card loaders
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                child: Column(
+                                  children: List.generate(
+                                    3,
+                                    (index) => Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 15,
+                                      ),
+                                      child: CardLoading(
+                                        height: 80,
+                                        width: double.infinity,
+                                        borderRadius: BorderRadius.circular(10),
+                                        margin: EdgeInsets.zero,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                        // ================================================
 
                         if (restaurantState is RestaurantError) {
                           return SizedBox(
@@ -268,7 +383,6 @@ class _HomeState extends State<Home> {
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // ===== HORIZONTAL LIST (First 4) =====
                               SizedBox(
                                 height: 310,
                                 child: ListView.builder(
@@ -286,9 +400,6 @@ class _HomeState extends State<Home> {
                                   },
                                 ),
                               ),
-                              // ======================================
-
-                              // ===== NEW: Vertically scrollable list with lazy loading =====
                               if (remaining.isNotEmpty) ...[
                                 Padding(
                                   padding: const EdgeInsets.only(
@@ -303,7 +414,6 @@ class _HomeState extends State<Home> {
                                     ),
                                   ),
                                 ),
-                                // ===== NEW: Fixed height container for vertical scrolling =====
                                 SizedBox(
                                   height:
                                       MediaQuery.of(context).size.height * 0.5,
@@ -312,17 +422,14 @@ class _HomeState extends State<Home> {
                                       horizontal: 20,
                                     ),
                                     child: ListView.builder(
-                                      // ===== NEW: Changed to allow independent scrolling =====
                                       shrinkWrap: false,
                                       physics: AlwaysScrollableScrollPhysics(),
-                                      // ====================================================
                                       itemCount: remaining.length,
                                       itemBuilder: (context, index) {
                                         final restaurant = remaining[index];
 
                                         return Card(
                                           margin: EdgeInsets.only(bottom: 15),
-                                          color: Colors.white,
                                           child: ListTile(
                                             leading: ClipRRect(
                                               borderRadius:
@@ -357,10 +464,7 @@ class _HomeState extends State<Home> {
                                     ),
                                   ),
                                 ),
-                                // =========================================================
                               ],
-
-                              // ============================================================
                               SizedBox(height: 20),
                             ],
                           );
