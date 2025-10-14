@@ -23,6 +23,14 @@ class _HomeState extends State<Home> {
   String _currentLocation = 'Getting location...';
   bool _locationLoading = true;
 
+  // ===== Filter state variables =====
+  double _selectedRadius = 10;
+  // Future: Add more filters here easily
+  // double? _selectedRating;
+  // List<String>? _selectedCategories;
+  // String? _priceRange;
+  // =======================================
+
   @override
   void initState() {
     super.initState();
@@ -60,12 +68,13 @@ class _HomeState extends State<Home> {
             });
           }
 
+          // ===== MODIFIED: Use _selectedRadius =====
           if (mounted) {
             context.read<RestaurantBloc>().add(
               LoadNearbyRestaurantsEvent(
                 latitude: position.latitude,
                 longitude: position.longitude,
-                radiusInKm: 40,
+                radiusInKm: _selectedRadius,
               ),
             );
           }
@@ -80,7 +89,7 @@ class _HomeState extends State<Home> {
               LoadNearbyRestaurantsEvent(
                 latitude: position.latitude,
                 longitude: position.longitude,
-                radiusInKm: 40,
+                radiusInKm: _selectedRadius,
               ),
             );
           }
@@ -190,17 +199,58 @@ class _HomeState extends State<Home> {
                         ),
                       ],
                     ),
+                    // ===== Filter header with radius button =====
                     Padding(
                       padding: const EdgeInsets.only(left: 20, top: 20),
-                      child: Text(
-                        "The most relevant",
-                        style: AppStyles.headingTextStyle(fontSize: 25),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "The most relevant",
+                            style: AppStyles.headingTextStyle(fontSize: 25),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 20),
+                            child: GestureDetector(
+                              onTap: _showFilterModal,
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.deepPurple,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.tune,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      '${_selectedRadius.toInt()}km',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    // ================================================
                     SizedBox(height: 20),
                     BlocBuilder<RestaurantBloc, RestaurantState>(
                       builder: (context, restaurantState) {
-                        // ===== Show card loaders while getting location =====
                         if (_locationLoading) {
                           return Column(
                             children: [
@@ -259,13 +309,10 @@ class _HomeState extends State<Home> {
                             ],
                           );
                         }
-                        // ================================================================
 
-                        // ===== Show card loaders during restaurant loading =====
                         if (restaurantState is RestaurantLoading) {
                           return Column(
                             children: [
-                              // Horizontal card loaders
                               SizedBox(
                                 height: 310,
                                 child: ListView(
@@ -297,7 +344,6 @@ class _HomeState extends State<Home> {
                                 ),
                               ),
                               SizedBox(height: 15),
-                              // Vertical card loaders
                               Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 20,
@@ -322,7 +368,6 @@ class _HomeState extends State<Home> {
                             ],
                           );
                         }
-                        // ================================================
 
                         if (restaurantState is RestaurantError) {
                           return SizedBox(
@@ -491,6 +536,159 @@ class _HomeState extends State<Home> {
           );
         },
       ),
+    );
+  }
+
+  // ===== Filter modal - easily extensible for other filters =====
+  void _showFilterModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return DraggableScrollableSheet(
+              expand: false,
+              builder: (context, scrollController) {
+                return SingleChildScrollView(
+                  controller: scrollController,
+                  child: Container(
+                    padding: EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Filters',
+                          style: AppStyles.headingTextStyle(fontSize: 22),
+                        ),
+                        SizedBox(height: 30),
+                        // ===== Radius Filter Section =====
+                        _buildRadiusFilterSection(setModalState),
+                        // ==================================
+                        SizedBox(height: 30),
+                        // Future: Add more filters here easily
+                        // _buildRatingFilterSection(setModalState),
+                        // _buildCategoryFilterSection(setModalState),
+                        // _buildPriceRangeFilterSection(setModalState),
+                        SizedBox(height: 30),
+                        // Apply button
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              setState(() {
+                                _locationLoading = true;
+                              });
+                              _initializeLocationAndFetchRestaurants();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.deepPurple,
+                              padding: EdgeInsets.symmetric(vertical: 15),
+                            ),
+                            child: Text(
+                              'Apply Filters',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ===== Radius filter widget - reusable pattern =====
+  Widget _buildRadiusFilterSection(StateSetter setModalState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Radius',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 15),
+        Container(
+          padding: EdgeInsets.all(15),
+          decoration: BoxDecoration(
+            color: Colors.deepPurple.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.location_on, color: Colors.deepPurple),
+              SizedBox(width: 10),
+              Text(
+                '${_selectedRadius.toInt()} km',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 15),
+        Slider(
+          value: _selectedRadius,
+          min: 1,
+          max: 50,
+          divisions: 49,
+          label: '${_selectedRadius.toInt()} km',
+          onChanged: (value) {
+            setModalState(() {
+              _selectedRadius = value;
+            });
+          },
+        ),
+        SizedBox(height: 15),
+        Text(
+          'Quick Select',
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+        SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          children:
+              [5, 10, 15, 25].map((radius) {
+                return ElevatedButton(
+                  onPressed: () {
+                    setModalState(() {
+                      _selectedRadius = radius.toDouble();
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        _selectedRadius == radius
+                            ? Colors.deepPurple
+                            : Colors.grey[300],
+                  ),
+                  child: Text(
+                    '${radius}km',
+                    style: TextStyle(
+                      color:
+                          _selectedRadius == radius
+                              ? Colors.white
+                              : Colors.black,
+                    ),
+                  ),
+                );
+              }).toList(),
+        ),
+      ],
     );
   }
 }
