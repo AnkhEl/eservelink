@@ -25,10 +25,9 @@ class _HomeState extends State<Home> {
 
   // ===== Filter state variables =====
   double _selectedRadius = 10;
-  // Future: Add more filters here easily
-  // double? _selectedRating;
-  // List<String>? _selectedCategories;
-  // String? _priceRange;
+  double? _selectedRating;
+  List<String> _selectedCategories = [];
+  String? _selectedPriceRange;
   // =======================================
 
   @override
@@ -68,7 +67,6 @@ class _HomeState extends State<Home> {
             });
           }
 
-          // ===== MODIFIED: Use _selectedRadius =====
           if (mounted) {
             context.read<RestaurantBloc>().add(
               LoadNearbyRestaurantsEvent(
@@ -199,7 +197,7 @@ class _HomeState extends State<Home> {
                         ),
                       ],
                     ),
-                    // ===== Filter header with radius button =====
+                    // Filter header with filter button
                     Padding(
                       padding: const EdgeInsets.only(left: 20, top: 20),
                       child: Row(
@@ -232,7 +230,7 @@ class _HomeState extends State<Home> {
                                     ),
                                     SizedBox(width: 5),
                                     Text(
-                                      '${_selectedRadius.toInt()}km',
+                                      _getActiveFilterText(),
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 14,
@@ -247,7 +245,6 @@ class _HomeState extends State<Home> {
                         ],
                       ),
                     ),
-                    // ================================================
                     SizedBox(height: 20),
                     BlocBuilder<RestaurantBloc, RestaurantState>(
                       builder: (context, restaurantState) {
@@ -420,10 +417,29 @@ class _HomeState extends State<Home> {
                             );
                           }
 
+                          // Apply client-side filters
+                          final filteredRestaurants = _applyFilters(
+                            restaurantState.restaurants,
+                          );
+
+                          if (filteredRestaurants.isEmpty) {
+                            return SizedBox(
+                              height: 310,
+                              child: Center(
+                                child: Text(
+                                  'No restaurants match your filters',
+                                  style: AppStyles.headingTextStyle(
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }
+
                           final firstFour =
-                              restaurantState.restaurants.take(4).toList();
+                              filteredRestaurants.take(4).toList();
                           final remaining =
-                              restaurantState.restaurants.skip(4).toList();
+                              filteredRestaurants.skip(4).toList();
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -539,7 +555,46 @@ class _HomeState extends State<Home> {
     );
   }
 
-  // ===== Filter modal - easily extensible for other filters =====
+  // Apply client-side filters
+  List<dynamic> _applyFilters(List<dynamic> restaurants) {
+    return restaurants.where((restaurant) {
+      // Rating filter
+      if (_selectedRating != null && restaurant.rating < _selectedRating!) {
+        return false;
+      }
+
+      // Category filter
+      if (_selectedCategories.isNotEmpty) {
+        final hasMatchingCategory = restaurant.categories.any(
+          (category) => _selectedCategories.contains(category),
+        );
+        if (!hasMatchingCategory) return false;
+      }
+
+      // Price range filter
+      if (_selectedPriceRange != null &&
+          restaurant.priceRange != _selectedPriceRange) {
+        return false;
+      }
+
+      return true;
+    }).toList();
+  }
+
+  // Get active filter text for filter button
+  String _getActiveFilterText() {
+    int activeFilters = 0;
+    if (_selectedRating != null) activeFilters++;
+    if (_selectedCategories.isNotEmpty) activeFilters++;
+    if (_selectedPriceRange != null) activeFilters++;
+
+    if (activeFilters == 0) {
+      return '${_selectedRadius.toInt()}km';
+    }
+    return '${_selectedRadius.toInt()}km (+$activeFilters)';
+  }
+
+  // Filter modal
   void _showFilterModal() {
     showModalBottomSheet(
       context: context,
@@ -562,39 +617,66 @@ class _HomeState extends State<Home> {
                           style: AppStyles.headingTextStyle(fontSize: 22),
                         ),
                         SizedBox(height: 30),
-                        // ===== Radius Filter Section =====
                         _buildRadiusFilterSection(setModalState),
-                        // ==================================
+                        Divider(height: 40),
+                        _buildRatingFilterSection(setModalState),
+                        Divider(height: 40),
+                        _buildCategoryFilterSection(setModalState),
+                        Divider(height: 40),
+                        _buildPriceRangeFilterSection(setModalState),
                         SizedBox(height: 30),
-                        // Future: Add more filters here easily
-                        // _buildRatingFilterSection(setModalState),
-                        // _buildCategoryFilterSection(setModalState),
-                        // _buildPriceRangeFilterSection(setModalState),
-                        SizedBox(height: 30),
-                        // Apply button
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              Navigator.pop(context);
-                              setState(() {
-                                _locationLoading = true;
-                              });
-                              _initializeLocationAndFetchRestaurants();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.deepPurple,
-                              padding: EdgeInsets.symmetric(vertical: 15),
-                            ),
-                            child: Text(
-                              'Apply Filters',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  setModalState(() {
+                                    _selectedRadius = 10;
+                                    _selectedRating = null;
+                                    _selectedCategories = [];
+                                    _selectedPriceRange = null;
+                                  });
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(vertical: 15),
+                                  side: BorderSide(color: Colors.deepPurple),
+                                ),
+                                child: Text(
+                                  'Clear All',
+                                  style: TextStyle(
+                                    color: Colors.deepPurple,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              flex: 2,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  setState(() {
+                                    _locationLoading = true;
+                                  });
+                                  _initializeLocationAndFetchRestaurants();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.deepPurple,
+                                  padding: EdgeInsets.symmetric(vertical: 15),
+                                ),
+                                child: Text(
+                                  'Apply Filters',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         SizedBox(height: 20),
                       ],
@@ -609,7 +691,7 @@ class _HomeState extends State<Home> {
     );
   }
 
-  // ===== Radius filter widget - reusable pattern =====
+  // Radius filter section
   Widget _buildRadiusFilterSection(StateSetter setModalState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -685,6 +767,174 @@ class _HomeState extends State<Home> {
                               : Colors.black,
                     ),
                   ),
+                );
+              }).toList(),
+        ),
+      ],
+    );
+  }
+
+  // Rating filter section
+  Widget _buildRatingFilterSection(StateSetter setModalState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Minimum Rating',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 15),
+        Wrap(
+          spacing: 10,
+          children:
+              [1.0, 2.0, 3.0, 4.0, 4.5].map((rating) {
+                return FilterChip(
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.star,
+                        color:
+                            _selectedRating == rating
+                                ? Colors.white
+                                : Colors.amber,
+                        size: 16,
+                      ),
+                      SizedBox(width: 5),
+                      Text('${rating.toStringAsFixed(1)}+'),
+                    ],
+                  ),
+                  selected: _selectedRating == rating,
+                  onSelected: (selected) {
+                    setModalState(() {
+                      _selectedRating = selected ? rating : null;
+                    });
+                  },
+                  selectedColor: Colors.deepPurple,
+                  backgroundColor: Colors.grey[200],
+                  labelStyle: TextStyle(
+                    color:
+                        _selectedRating == rating ? Colors.white : Colors.black,
+                  ),
+                );
+              }).toList(),
+        ),
+      ],
+    );
+  }
+
+  // Category filter section
+  Widget _buildCategoryFilterSection(StateSetter setModalState) {
+    final categories = [
+      'Italian',
+      'Asian',
+      'Burgers',
+      'Sushi',
+      'Steakhouse',
+      'Fast Food',
+      'Fine Dining',
+      'Japanese',
+      'Fusion',
+      'South African',
+      'Grill',
+      'African',
+      'Casual Dining',
+      'Cafe',
+      'International',
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Categories',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 15),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children:
+              categories.map((category) {
+                final isSelected = _selectedCategories.contains(category);
+                return FilterChip(
+                  label: Text(category),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    setModalState(() {
+                      if (selected) {
+                        _selectedCategories.add(category);
+                      } else {
+                        _selectedCategories.remove(category);
+                      }
+                    });
+                  },
+                  selectedColor: Colors.deepPurple,
+                  backgroundColor: Colors.grey[200],
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.white : Colors.black,
+                  ),
+                );
+              }).toList(),
+        ),
+      ],
+    );
+  }
+
+  // Price range filter section
+  Widget _buildPriceRangeFilterSection(StateSetter setModalState) {
+    final priceRanges = [
+      {'label': 'Budget', 'range': 'R50 - R150'},
+      {'label': 'Moderate', 'range': 'R100 - R300'},
+      {'label': 'Premium', 'range': 'R150 - R400'},
+      {'label': 'Luxury', 'range': 'R250 - R600'},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Price Range',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 15),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children:
+              priceRanges.map((priceRange) {
+                final isSelected = _selectedPriceRange == priceRange['range'];
+                return ChoiceChip(
+                  label: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        priceRange['label']!,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isSelected ? Colors.white : Colors.black,
+                        ),
+                      ),
+                      Text(
+                        priceRange['range']!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isSelected ? Colors.white70 : Colors.black54,
+                        ),
+                      ),
+                    ],
+                  ),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    setModalState(() {
+                      _selectedPriceRange =
+                          selected ? priceRange['range'] : null;
+                    });
+                  },
+                  selectedColor: Colors.deepPurple,
+                  backgroundColor: Colors.grey[200],
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 );
               }).toList(),
         ),
