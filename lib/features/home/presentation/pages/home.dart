@@ -10,6 +10,7 @@ import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
+import 'dart:math' as math;
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -23,12 +24,11 @@ class _HomeState extends State<Home> {
   String _currentLocation = 'Getting location...';
   bool _locationLoading = true;
 
-  // ===== Filter state variables =====
+  // Filter state variables
   double _selectedRadius = 10;
   double? _selectedRating;
   List<String> _selectedCategories = [];
   String? _selectedPriceRange;
-  // =======================================
 
   @override
   void initState() {
@@ -197,7 +197,6 @@ class _HomeState extends State<Home> {
                         ),
                       ],
                     ),
-                    // Filter header with filter button
                     Padding(
                       padding: const EdgeInsets.only(left: 20, top: 20),
                       child: Row(
@@ -417,7 +416,6 @@ class _HomeState extends State<Home> {
                             );
                           }
 
-                          // Apply client-side filters
                           final filteredRestaurants = _applyFilters(
                             restaurantState.restaurants,
                           );
@@ -451,12 +449,19 @@ class _HomeState extends State<Home> {
                                   itemCount: firstFour.length,
                                   itemBuilder: (context, index) {
                                     final restaurant = firstFour[index];
+                                    final distance = _calculateDistance(
+                                      restaurantState.userLatitude,
+                                      restaurantState.userLongitude,
+                                      restaurant.geolocation.latitude,
+                                      restaurant.geolocation.longitude,
+                                    );
 
                                     return RestaurantCard(
                                       imageAsset: restaurant.imageUrl,
                                       restaurantName: restaurant.name,
                                       location: restaurant.address,
                                       rating: restaurant.rating.toInt(),
+                                      distance: distance,
                                     );
                                   },
                                 ),
@@ -488,6 +493,12 @@ class _HomeState extends State<Home> {
                                       itemCount: remaining.length,
                                       itemBuilder: (context, index) {
                                         final restaurant = remaining[index];
+                                        final distance = _calculateDistance(
+                                          restaurantState.userLatitude,
+                                          restaurantState.userLongitude,
+                                          restaurant.geolocation.latitude,
+                                          restaurant.geolocation.longitude,
+                                        );
 
                                         return Card(
                                           margin: EdgeInsets.only(bottom: 15),
@@ -503,7 +514,36 @@ class _HomeState extends State<Home> {
                                               ),
                                             ),
                                             title: Text(restaurant.name),
-                                            subtitle: Text(restaurant.address),
+                                            subtitle: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  restaurant.address,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                                SizedBox(height: 4),
+                                                Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.location_on,
+                                                      size: 14,
+                                                      color: Colors.grey[600],
+                                                    ),
+                                                    SizedBox(width: 4),
+                                                    Text(
+                                                      '${distance.toStringAsFixed(1)} km away',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: Colors.grey[600],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
                                             trailing: Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
@@ -555,15 +595,12 @@ class _HomeState extends State<Home> {
     );
   }
 
-  // Apply client-side filters
   List<dynamic> _applyFilters(List<dynamic> restaurants) {
     return restaurants.where((restaurant) {
-      // Rating filter
       if (_selectedRating != null && restaurant.rating < _selectedRating!) {
         return false;
       }
 
-      // Category filter
       if (_selectedCategories.isNotEmpty) {
         final hasMatchingCategory = restaurant.categories.any(
           (category) => _selectedCategories.contains(category),
@@ -571,7 +608,6 @@ class _HomeState extends State<Home> {
         if (!hasMatchingCategory) return false;
       }
 
-      // Price range filter
       if (_selectedPriceRange != null &&
           restaurant.priceRange != _selectedPriceRange) {
         return false;
@@ -581,7 +617,31 @@ class _HomeState extends State<Home> {
     }).toList();
   }
 
-  // Get active filter text for filter button
+  double _calculateDistance(
+    double lat1,
+    double lng1,
+    double lat2,
+    double lng2,
+  ) {
+    const double earthRadiusKm = 6371;
+    final double dLat = _toRadians(lat2 - lat1);
+    final double dLng = _toRadians(lng2 - lng1);
+
+    final double a =
+        (math.sin(dLat / 2) * math.sin(dLat / 2)) +
+        math.cos(_toRadians(lat1)) *
+            math.cos(_toRadians(lat2)) *
+            math.sin(dLng / 2) *
+            math.sin(dLng / 2);
+
+    final double c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadiusKm * c;
+  }
+
+  double _toRadians(double degrees) {
+    return degrees * math.pi / 180;
+  }
+
   String _getActiveFilterText() {
     int activeFilters = 0;
     if (_selectedRating != null) activeFilters++;
@@ -594,7 +654,6 @@ class _HomeState extends State<Home> {
     return '${_selectedRadius.toInt()}km (+$activeFilters)';
   }
 
-  // Filter modal
   void _showFilterModal() {
     showModalBottomSheet(
       context: context,
@@ -691,7 +750,6 @@ class _HomeState extends State<Home> {
     );
   }
 
-  // Radius filter section
   Widget _buildRadiusFilterSection(StateSetter setModalState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -774,7 +832,6 @@ class _HomeState extends State<Home> {
     );
   }
 
-  // Rating filter section
   Widget _buildRatingFilterSection(StateSetter setModalState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -823,7 +880,6 @@ class _HomeState extends State<Home> {
     );
   }
 
-  // Category filter section
   Widget _buildCategoryFilterSection(StateSetter setModalState) {
     final categories = [
       'Italian',
@@ -881,7 +937,6 @@ class _HomeState extends State<Home> {
     );
   }
 
-  // Price range filter section
   Widget _buildPriceRangeFilterSection(StateSetter setModalState) {
     final priceRanges = [
       {'label': 'Budget', 'range': 'R50 - R150'},

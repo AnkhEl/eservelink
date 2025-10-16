@@ -6,6 +6,7 @@ class RestaurantCard extends StatelessWidget {
   final String restaurantName;
   final String location;
   final int rating; // Number of stars (1-5)
+  final double? distance;
 
   const RestaurantCard({
     super.key,
@@ -13,6 +14,7 @@ class RestaurantCard extends StatelessWidget {
     required this.restaurantName,
     required this.location,
     required this.rating,
+    this.distance,
   });
 
   @override
@@ -32,18 +34,57 @@ class RestaurantCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Hotel Image
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
-                child: Image.asset(
-                  imageAsset,
-                  width: double.infinity,
-                  height: 220, // increased image height
-                  fit: BoxFit.cover,
-                ),
+              // ===== Distance badge overlay on image =====
+              Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
+                    ),
+                    child: Image.asset(
+                      imageAsset,
+                      width: double.infinity,
+                      height: 220,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  if (distance != null)
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.deepPurple,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.location_on,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${distance!.toStringAsFixed(1)} km',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
+              // ===================================================
               const SizedBox(height: 8),
               // Name and Stars
               Padding(
@@ -83,7 +124,7 @@ class RestaurantCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        location, // only first part
+                        location,
                         style: AppStyles.normalTextStyle(fontSize: 14),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -92,10 +133,7 @@ class RestaurantCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // Removed Spacer and added a fixed bottom padding for uniformity
-              const SizedBox(
-                height: 12,
-              ), // Add space at the bottom for better visual balance
+              const SizedBox(height: 12),
             ],
           ),
         ),
