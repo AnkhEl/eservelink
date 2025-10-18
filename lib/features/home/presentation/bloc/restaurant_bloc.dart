@@ -82,12 +82,15 @@ class RestaurantBloc extends Bloc<RestaurantEvent, RestaurantState> {
     NavigateToRestaurantDetailEvent event,
     Emitter<RestaurantState> emit,
   ) async {
+    final currentState = state;
+
     emit(
       RestaurantShowDetail(
         restaurant: event.restaurant,
         distance: event.distance,
         userLatitude: event.userLatitude,
         userLongitude: event.userLongitude,
+        previousState: currentState,
       ),
     );
   }
@@ -96,6 +99,12 @@ class RestaurantBloc extends Bloc<RestaurantEvent, RestaurantState> {
     NavigateBackToRestaurantListEvent event,
     Emitter<RestaurantState> emit,
   ) async {
-    emit(RestaurantInitial());
+    if (state is RestaurantShowDetail) {
+      final detailState = state as RestaurantShowDetail;
+      emit(detailState.previousState); // Restore the saved state
+    } else {
+      // Fallback to initial state
+      emit(RestaurantInitial());
+    }
   }
 }

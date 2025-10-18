@@ -50,14 +50,22 @@ class RestaurantShowDetail extends RestaurantState {
   final double distance;
   final double userLatitude;
   final double userLongitude;
+  final RestaurantState previousState;
 
   const RestaurantShowDetail({
     required this.restaurant,
     required this.distance,
     required this.userLatitude,
     required this.userLongitude,
+    required this.previousState,
   });
 
   @override
-  List<Object> get props => [restaurant, distance, userLatitude, userLongitude];
+  List<Object> get props => [
+    restaurant,
+    distance,
+    userLatitude,
+    userLongitude,
+    previousState,
+  ];
 }

@@ -25,15 +25,24 @@ class _HomeState extends State<Home> {
   bool _locationLoading = true;
 
   // Filter state variables
-  double _selectedRadius = 10;
-  double? _selectedRating;
-  List<String> _selectedCategories = [];
-  String? _selectedPriceRange;
+  static double _selectedRadius = 10;
+  static double? _selectedRating;
+  static List<String> _selectedCategories = [];
+  static String? _selectedPriceRange;
 
   @override
   void initState() {
     super.initState();
-    _initializeLocationAndFetchRestaurants();
+    final currentState = context.read<RestaurantBloc>().state;
+    if (currentState is RestaurantInitial) {
+      _initializeLocationAndFetchRestaurants();
+    } else if (currentState is RestaurantNearbyLoaded) {
+      // We already have data, just update the location display
+      setState(() {
+        _locationLoading = false;
+      });
+      _updateLocationDisplayOnly();
+    }
   }
 
   Future<void> _initializeLocationAndFetchRestaurants() async {
@@ -1023,6 +1032,40 @@ class _HomeState extends State<Home> {
               }).toList(),
         ),
       ],
+    );
+  }
+
+  Future<void> _updateLocationDisplayOnly() async {
+    final locationResult = await _locationService.getCurrentLocation();
+    locationResult.fold(
+      (failure) {
+        if (mounted) {
+          setState(() {
+            _currentLocation = failure.message;
+          });
+        }
+      },
+      (position) async {
+        try {
+          List<Placemark> placemarks = await placemarkFromCoordinates(
+            position.latitude,
+            position.longitude,
+          );
+          if (placemarks.isNotEmpty && mounted) {
+            final place = placemarks.first;
+            setState(() {
+              _currentLocation =
+                  "${place.country}, ${place.locality ?? place.administrativeArea}";
+            });
+          }
+        } catch (e) {
+          if (mounted) {
+            setState(() {
+              _currentLocation = 'Could not fetch location name';
+            });
+          }
+        }
+      },
     );
   }
 }

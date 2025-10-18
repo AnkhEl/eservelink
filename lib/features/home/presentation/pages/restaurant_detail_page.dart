@@ -3,7 +3,6 @@ import 'package:eservelink/features/home/domain/entities/restaurant_entity.dart'
 import 'package:eservelink/features/home/presentation/bloc/restaurant_bloc.dart';
 import 'package:eservelink/features/home/presentation/bloc/restaurant_event.dart';
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -30,13 +29,20 @@ class RestaurantDetailPage extends StatelessWidget {
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back, size: 40),
-              onPressed: () {
-                context.read<RestaurantBloc>().add(
-                  const NavigateBackToRestaurantListEvent(),
-                );
-              },
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: CircleAvatar(
+                radius: 28,
+                backgroundColor: Colors.black,
+                child: IconButton(
+                  icon: Icon(Icons.arrow_back, size: 28, color: Colors.white),
+                  onPressed: () {
+                    context.read<RestaurantBloc>().add(
+                      const NavigateBackToRestaurantListEvent(),
+                    );
+                  },
+                ),
+              ),
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
