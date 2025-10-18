@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:eservelink/features/home/domain/entities/restaurant_entity.dart';
 
 abstract class RestaurantEvent extends Equatable {
   const RestaurantEvent();
@@ -44,4 +45,25 @@ class RefreshRestaurantsEvent extends RestaurantEvent {
 
   @override
   List<Object> get props => [latitude, longitude, radiusInKm];
+}
+
+class NavigateToRestaurantDetailEvent extends RestaurantEvent {
+  final RestaurantEntity restaurant;
+  final double distance;
+  final double userLatitude;
+  final double userLongitude;
+
+  const NavigateToRestaurantDetailEvent({
+    required this.restaurant,
+    required this.distance,
+    required this.userLatitude,
+    required this.userLongitude,
+  });
+
+  @override
+  List<Object> get props => [restaurant, distance, userLatitude, userLongitude];
+}
+
+class NavigateBackToRestaurantListEvent extends RestaurantEvent {
+  const NavigateBackToRestaurantListEvent();
 }

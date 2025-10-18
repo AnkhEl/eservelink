@@ -44,3 +44,20 @@ class RestaurantError extends RestaurantState {
   @override
   List<Object> get props => [message];
 }
+
+class RestaurantShowDetail extends RestaurantState {
+  final RestaurantEntity restaurant;
+  final double distance;
+  final double userLatitude;
+  final double userLongitude;
+
+  const RestaurantShowDetail({
+    required this.restaurant,
+    required this.distance,
+    required this.userLatitude,
+    required this.userLongitude,
+  });
+
+  @override
+  List<Object> get props => [restaurant, distance, userLatitude, userLongitude];
+}

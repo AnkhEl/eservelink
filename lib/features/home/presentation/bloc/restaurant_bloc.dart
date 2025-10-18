@@ -18,6 +18,8 @@ class RestaurantBloc extends Bloc<RestaurantEvent, RestaurantState> {
     on<LoadNearbyRestaurantsEvent>(_onLoadNearbyRestaurants);
     on<LoadRestaurantByIdEvent>(_onLoadRestaurantById);
     on<RefreshRestaurantsEvent>(_onRefreshRestaurants);
+    on<NavigateToRestaurantDetailEvent>(_onNavigateToRestaurantDetail);
+    on<NavigateBackToRestaurantListEvent>(_onNavigateBackToRestaurantList);
   }
 
   Future<void> _onLoadNearbyRestaurants(
@@ -74,5 +76,26 @@ class RestaurantBloc extends Bloc<RestaurantEvent, RestaurantState> {
       ),
       emit,
     );
+  }
+
+  Future<void> _onNavigateToRestaurantDetail(
+    NavigateToRestaurantDetailEvent event,
+    Emitter<RestaurantState> emit,
+  ) async {
+    emit(
+      RestaurantShowDetail(
+        restaurant: event.restaurant,
+        distance: event.distance,
+        userLatitude: event.userLatitude,
+        userLongitude: event.userLongitude,
+      ),
+    );
+  }
+
+  Future<void> _onNavigateBackToRestaurantList(
+    NavigateBackToRestaurantListEvent event,
+    Emitter<RestaurantState> emit,
+  ) async {
+    emit(RestaurantInitial());
   }
 }

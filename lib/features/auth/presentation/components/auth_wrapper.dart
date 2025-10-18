@@ -3,7 +3,7 @@ import 'package:eservelink/features/auth/presentation/bloc/auth_event.dart';
 import 'package:eservelink/features/auth/presentation/pages/email_verification_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/password_reset_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/register_page.dart';
-import 'package:eservelink/features/home/presentation/pages/home_page.dart';
+import 'package:eservelink/features/home/presentation/widgets/home_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
@@ -69,7 +69,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
         }
 
         if (state is AuthSuccess) {
-          return const HomePage();
+          return const HomeWrapper();
         }
 
         if (state is AuthShowRegister) {

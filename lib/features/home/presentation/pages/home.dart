@@ -462,6 +462,18 @@ class _HomeState extends State<Home> {
                                       location: restaurant.address,
                                       rating: restaurant.rating.toInt(),
                                       distance: distance,
+                                      onTap: () {
+                                        context.read<RestaurantBloc>().add(
+                                          NavigateToRestaurantDetailEvent(
+                                            restaurant: restaurant,
+                                            distance: distance,
+                                            userLatitude:
+                                                restaurantState.userLatitude,
+                                            userLongitude:
+                                                restaurantState.userLongitude,
+                                          ),
+                                        );
+                                      },
                                     );
                                   },
                                 ),
@@ -500,64 +512,81 @@ class _HomeState extends State<Home> {
                                           restaurant.geolocation.longitude,
                                         );
 
-                                        return Card(
-                                          margin: EdgeInsets.only(bottom: 15),
-                                          child: ListTile(
-                                            leading: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              child: Image.asset(
-                                                restaurant.imageUrl,
-                                                width: 60,
-                                                height: 60,
-                                                fit: BoxFit.cover,
+                                        return GestureDetector(
+                                          onTap: () {
+                                            context.read<RestaurantBloc>().add(
+                                              NavigateToRestaurantDetailEvent(
+                                                restaurant: restaurant,
+                                                distance: distance,
+                                                userLatitude:
+                                                    restaurantState
+                                                        .userLatitude,
+                                                userLongitude:
+                                                    restaurantState
+                                                        .userLongitude,
                                               ),
-                                            ),
-                                            title: Text(restaurant.name),
-                                            subtitle: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  restaurant.address,
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
+                                            );
+                                          },
+                                          child: Card(
+                                            margin: EdgeInsets.only(bottom: 15),
+                                            child: ListTile(
+                                              leading: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                child: Image.asset(
+                                                  restaurant.imageUrl,
+                                                  width: 60,
+                                                  height: 60,
+                                                  fit: BoxFit.cover,
                                                 ),
-                                                SizedBox(height: 4),
-                                                Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.location_on,
-                                                      size: 14,
-                                                      color: Colors.grey[600],
-                                                    ),
-                                                    SizedBox(width: 4),
-                                                    Text(
-                                                      '${distance.toStringAsFixed(1)} km away',
-                                                      style: TextStyle(
-                                                        fontSize: 12,
+                                              ),
+                                              title: Text(restaurant.name),
+                                              subtitle: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    restaurant.address,
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                  SizedBox(height: 4),
+                                                  Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.location_on,
+                                                        size: 14,
                                                         color: Colors.grey[600],
                                                       ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                            trailing: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.star,
-                                                  color: Colors.amber,
-                                                  size: 20,
-                                                ),
-                                                SizedBox(width: 5),
-                                                Text(
-                                                  restaurant.rating
-                                                      .toStringAsFixed(1),
-                                                ),
-                                              ],
+                                                      SizedBox(width: 4),
+                                                      Text(
+                                                        '${distance.toStringAsFixed(1)} km away',
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color:
+                                                              Colors.grey[600],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              trailing: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.star,
+                                                    color: Colors.amber,
+                                                    size: 20,
+                                                  ),
+                                                  SizedBox(width: 5),
+                                                  Text(
+                                                    restaurant.rating
+                                                        .toStringAsFixed(1),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         );
