@@ -54,6 +54,7 @@ dependencies:
   mobile_scanner: ^7.1.2
   geocoding: ^4.0.0
   card_loading: ^0.3.2
+  timeago: ^3.7.1
 
 dev_dependencies:
   flutter_test:
