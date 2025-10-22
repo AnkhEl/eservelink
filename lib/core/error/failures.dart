@@ -22,3 +22,27 @@ class PermissionFailure extends Failure {
 class LocationFailure extends Failure {
   const LocationFailure(super.message);
 }
+
+class ReviewNotFoundFailure extends Failure {
+  const ReviewNotFoundFailure() : super('Review not found');
+}
+
+class NoReviewsFoundFailure extends Failure {
+  const NoReviewsFoundFailure() : super('No reviews found for this restaurant');
+}
+
+class ReviewFetchFailure extends Failure {
+  const ReviewFetchFailure(super.message);
+}
+
+class ReviewCreateFailure extends Failure {
+  const ReviewCreateFailure(super.message);
+}
+
+class ReviewUpdateFailure extends Failure {
+  const ReviewUpdateFailure(super.message);
+}
+
+class ReviewDeleteFailure extends Failure {
+  const ReviewDeleteFailure(super.message);
+}
