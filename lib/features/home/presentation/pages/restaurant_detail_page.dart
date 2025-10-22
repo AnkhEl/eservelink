@@ -9,6 +9,7 @@ import 'package:eservelink/features/home/presentation/widgets/reviews_section.da
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eservelink/core/util/injection_container.dart' as di;
+import 'package:url_launcher/url_launcher.dart';
 
 class RestaurantDetailPage extends StatelessWidget {
   final RestaurantEntity restaurant;
@@ -457,23 +458,44 @@ class RestaurantDetailPage extends StatelessWidget {
     );
   }
 
-  void _makePhoneCall(BuildContext context, String phoneNumber) {
-    // TODO: Implement actual phone call functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Calling $phoneNumber...'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+  Future<void> _makePhoneCall(BuildContext context, String phoneNumber) async {
+    final Uri uri = Uri(scheme: 'tel', path: phoneNumber);
+    try {
+      final bool launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open phone dialer.')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
   }
 
-  void _openDirections(BuildContext context) {
-    // TODO: Implement actual navigation/directions functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening directions...'),
-        duration: Duration(seconds: 2),
-      ),
+  Future<void> _openDirections(BuildContext context) async {
+    final Uri googleMapsUrl = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=${restaurant.geolocation.latitude},${restaurant.geolocation.longitude}',
     );
+
+    try {
+      final bool launched = await launchUrl(
+        googleMapsUrl,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open maps application.')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
   }
 }
