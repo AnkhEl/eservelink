@@ -54,23 +54,28 @@ class ReviewBloc extends Bloc<ReviewEvent, ReviewState> {
         final averageRatingResult = results[0] as Either<Failure, double>;
         final breakdownResult = results[1] as Either<Failure, Map<int, int>>;
 
-        averageRatingResult.fold(
-          (failure) => emit(ReviewError(failure.message)),
-          (averageRating) {
-            breakdownResult.fold(
-              (failure) => emit(ReviewError(failure.message)),
-              (ratingBreakdown) {
-                emit(
-                  ReviewLoaded(
-                    reviews: reviews,
-                    averageRating: averageRating,
-                    totalReviews: reviews.length,
-                    ratingBreakdown: ratingBreakdown,
-                  ),
-                );
-              },
-            );
-          },
+        if (averageRatingResult.isLeft() || breakdownResult.isLeft()) {
+          final failureMessage = averageRatingResult.fold(
+            (failure) => failure.message,
+            (_) => breakdownResult.fold(
+              (failure) => failure.message,
+              (_) => 'Unknown error',
+            ),
+          );
+          emit(ReviewError(failureMessage));
+          return;
+        }
+
+        final averageRating = averageRatingResult.getOrElse(() => 0.0);
+        final ratingBreakdown = breakdownResult.getOrElse(() => {});
+
+        emit(
+          ReviewLoaded(
+            reviews: reviews,
+            averageRating: averageRating,
+            totalReviews: reviews.length,
+            ratingBreakdown: ratingBreakdown,
+          ),
         );
       },
     );
