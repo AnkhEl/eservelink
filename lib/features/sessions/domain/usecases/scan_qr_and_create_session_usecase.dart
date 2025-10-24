@@ -22,7 +22,9 @@ class ScanQrAndCreateSessionUseCase
     ScanQrAndCreateSessionParams params,
   ) async {
     // Step 1: Get table by id
-    final tableResult = await tableRepository.getTableById(params.tableId);
+    final tableResult = await tableRepository.getTableById(
+      params.scannedQrCode,
+    );
 
     return await tableResult.fold((failure) => Left(failure), (table) async {
       // Step 2: Check if table is available
@@ -76,16 +78,16 @@ class ScanQrAndCreateSessionUseCase
 }
 
 class ScanQrAndCreateSessionParams extends Equatable {
-  final String tableId;
+  final String scannedQrCode;
   final String customerId;
   final String customerName;
 
   const ScanQrAndCreateSessionParams({
-    required this.tableId,
+    required this.scannedQrCode,
     required this.customerId,
     required this.customerName,
   });
 
   @override
-  List<Object> get props => [tableId, customerId, customerName];
+  List<Object> get props => [scannedQrCode, customerId, customerName];
 }

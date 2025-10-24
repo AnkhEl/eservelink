@@ -16,6 +16,11 @@ import 'package:eservelink/features/home/domain/usecases/get_restaurant_by_id_us
 import 'package:eservelink/features/home/presentation/bloc/restaurant_bloc.dart';
 import 'package:eservelink/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:eservelink/features/qr_scanner/presentation/bloc/qr_scanner_bloc.dart';
+import 'package:eservelink/features/sessions/domain/repositories/session_repository.dart';
+import 'package:eservelink/features/sessions/domain/usecases/get_active_session_usecase.dart';
+import 'package:eservelink/features/sessions/domain/usecases/scan_qr_and_create_session_usecase.dart';
+import 'package:eservelink/features/sessions/domain/usecases/send_ping_usecase.dart';
+import 'package:eservelink/features/sessions/presentation/bloc/session_bloc.dart';
 import 'package:eservelink/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:eservelink/core/util/injection_container.dart' as di;
@@ -65,6 +70,15 @@ class MyApp extends StatelessWidget {
                     di.sl<GetNearbyRestaurantsUseCase>(),
                 getRestaurantByIdUseCase: di.sl<GetRestaurantByIdUseCase>(),
                 addRestaurantUseCase: di.sl<AddRestaurantUseCase>(),
+              ),
+        ),
+        BlocProvider<SessionBloc>(
+          create:
+              (_) => SessionBloc(
+                scanQrAndCreateSession: di.sl<ScanQrAndCreateSessionUseCase>(),
+                getActiveSession: di.sl<GetActiveSessionUseCase>(),
+                sendPing: di.sl<SendPingUseCase>(),
+                sessionRepository: di.sl<SessionRepository>(),
               ),
         ),
       ],

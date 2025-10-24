@@ -20,9 +20,11 @@ import 'package:eservelink/features/qr_scanner/data/repositories/qr_scanner_repo
 import 'package:eservelink/features/qr_scanner/domain/repositories/qr_scanner_repository.dart';
 import 'package:eservelink/features/qr_scanner/domain/usecases/scan_qr_code.dart';
 import 'package:eservelink/features/sessions/data/datasources/chat_remote_data_source.dart';
+import 'package:eservelink/features/sessions/data/datasources/ping_remote_data_source.dart';
 import 'package:eservelink/features/sessions/data/datasources/session_remote_data_source.dart';
 import 'package:eservelink/features/sessions/data/datasources/table_remote_data_source.dart';
 import 'package:eservelink/features/sessions/data/repositories/chat_repository_impl.dart';
+import 'package:eservelink/features/sessions/data/repositories/ping_repository_impl.dart';
 import 'package:eservelink/features/sessions/data/repositories/session_repository_impl.dart';
 import 'package:eservelink/features/sessions/data/repositories/table_repository_impl.dart';
 import 'package:eservelink/features/sessions/domain/repositories/chat_repository.dart';
@@ -78,6 +80,10 @@ Future<void> init() async {
     () => ChatRemoteDataSourceImpl(firestore: sl()),
   );
 
+  sl.registerLazySingleton<PingRemoteDataSource>(
+    () => PingRemoteDataSourceImpl(firestore: sl<FirebaseFirestore>()),
+  );
+
   // Repositories
   sl.registerLazySingleton<UserRepository>(
     () => UserRepositoryImpl(firestore: sl<FirebaseFirestore>()),
@@ -115,6 +121,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<ChatRepository>(
     () => ChatRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<PingRepository>(
+    () => PingRepositoryImpl(remoteDataSource: sl<PingRemoteDataSource>()),
   );
 
   // Use Cases
