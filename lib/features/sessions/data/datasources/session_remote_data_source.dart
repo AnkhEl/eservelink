@@ -242,10 +242,35 @@ class SessionRemoteDataSourceImpl implements SessionRemoteDataSource {
   @override
   Future<void> completeSession(String sessionId) async {
     try {
-      await firestore.collection('sessions').doc(sessionId).update({
+      // Get session first to know which table to update
+      final sessionDoc =
+          await firestore.collection('sessions').doc(sessionId).get();
+
+      if (!sessionDoc.exists) {
+        throw Exception('Session not found');
+      }
+
+      final tableId = sessionDoc.data()?['tableId'];
+
+      if (tableId == null) {
+        throw Exception('Table ID not found in session');
+      }
+
+      // Use batch write
+      final batch = firestore.batch();
+
+      // Update session to completed
+      batch.update(firestore.collection('sessions').doc(sessionId), {
         'status': 'completed',
         'endTime': FieldValue.serverTimestamp(),
       });
+
+      // Free up the table
+      batch.update(firestore.collection('tables').doc(tableId), {
+        'status': 'available',
+      });
+
+      await batch.commit();
     } catch (e) {
       throw Exception('Failed to complete session: $e');
     }
@@ -254,10 +279,36 @@ class SessionRemoteDataSourceImpl implements SessionRemoteDataSource {
   @override
   Future<void> cancelSession(String sessionId) async {
     try {
-      await firestore.collection('sessions').doc(sessionId).update({
+      // Get session first to know which table to update
+      final sessionDoc =
+          await firestore.collection('sessions').doc(sessionId).get();
+
+      if (!sessionDoc.exists) {
+        throw Exception('Session not found');
+      }
+
+      final tableId = sessionDoc.data()?['tableId'];
+
+      if (tableId == null) {
+        throw Exception('Table ID not found in session');
+      }
+
+      // Use batch write to ensure both operations succeed or fail together
+      final batch = firestore.batch();
+
+      // Update session status to cancelled
+      batch.update(firestore.collection('sessions').doc(sessionId), {
         'status': 'cancelled',
         'endTime': FieldValue.serverTimestamp(),
       });
+
+      // Update table status back to available
+      batch.update(firestore.collection('tables').doc(tableId), {
+        'status': 'available',
+      });
+
+      // Commit both operations atomically
+      await batch.commit();
     } catch (e) {
       throw Exception('Failed to cancel session: $e');
     }
