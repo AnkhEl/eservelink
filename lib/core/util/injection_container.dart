@@ -19,6 +19,21 @@ import 'package:eservelink/features/home/domain/usecases/get_restaurant_reviews_
 import 'package:eservelink/features/qr_scanner/data/repositories/qr_scanner_repository_impl.dart';
 import 'package:eservelink/features/qr_scanner/domain/repositories/qr_scanner_repository.dart';
 import 'package:eservelink/features/qr_scanner/domain/usecases/scan_qr_code.dart';
+import 'package:eservelink/features/sessions/data/datasources/chat_remote_data_source.dart';
+import 'package:eservelink/features/sessions/data/datasources/session_remote_data_source.dart';
+import 'package:eservelink/features/sessions/data/datasources/table_remote_data_source.dart';
+import 'package:eservelink/features/sessions/data/repositories/chat_repository_impl.dart';
+import 'package:eservelink/features/sessions/data/repositories/session_repository_impl.dart';
+import 'package:eservelink/features/sessions/data/repositories/table_repository_impl.dart';
+import 'package:eservelink/features/sessions/domain/repositories/chat_repository.dart';
+import 'package:eservelink/features/sessions/domain/repositories/ping_repository.dart';
+import 'package:eservelink/features/sessions/domain/repositories/session_repository.dart';
+import 'package:eservelink/features/sessions/domain/repositories/table_repository.dart';
+import 'package:eservelink/features/sessions/domain/usecases/get_active_session_usecase.dart';
+import 'package:eservelink/features/sessions/domain/usecases/join_session_as_waiter_usecase.dart';
+import 'package:eservelink/features/sessions/domain/usecases/scan_qr_and_create_session_usecase.dart';
+import 'package:eservelink/features/sessions/domain/usecases/send_chat_message_usecase.dart';
+import 'package:eservelink/features/sessions/domain/usecases/send_ping_usecase.dart';
 import 'package:get_it/get_it.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -51,6 +66,18 @@ Future<void> init() async {
     () => ReviewRemoteDataSourceImpl(firestore: sl<FirebaseFirestore>()),
   );
 
+  sl.registerLazySingleton<TableRemoteDataSource>(
+    () => TableRemoteDataSourceImpl(firestore: sl()),
+  );
+
+  sl.registerLazySingleton<SessionRemoteDataSource>(
+    () => SessionRemoteDataSourceImpl(firestore: sl()),
+  );
+
+  sl.registerLazySingleton<ChatRemoteDataSource>(
+    () => ChatRemoteDataSourceImpl(firestore: sl()),
+  );
+
   // Repositories
   sl.registerLazySingleton<UserRepository>(
     () => UserRepositoryImpl(firestore: sl<FirebaseFirestore>()),
@@ -76,6 +103,18 @@ Future<void> init() async {
 
   sl.registerLazySingleton<ReviewRepository>(
     () => ReviewRepositoryImpl(remoteDataSource: sl<ReviewRemoteDataSource>()),
+  );
+
+  sl.registerLazySingleton<TableRepository>(
+    () => TableRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<SessionRepository>(
+    () => SessionRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<ChatRepository>(
+    () => ChatRepositoryImpl(remoteDataSource: sl()),
   );
 
   // Use Cases
@@ -118,6 +157,35 @@ Future<void> init() async {
 
   sl.registerLazySingleton<GetRatingBreakdownUseCase>(
     () => GetRatingBreakdownUseCase(repository: sl<ReviewRepository>()),
+  );
+
+  sl.registerLazySingleton<ScanQrAndCreateSessionUseCase>(
+    () => ScanQrAndCreateSessionUseCase(
+      tableRepository: sl(),
+      sessionRepository: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<JoinSessionAsWaiterUseCase>(
+    () => JoinSessionAsWaiterUseCase(
+      sessionRepository: sl(),
+      tableRepository: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<GetActiveSessionUseCase>(
+    () => GetActiveSessionUseCase(repository: sl()),
+  );
+
+  sl.registerLazySingleton<SendChatMessageUseCase>(
+    () => SendChatMessageUseCase(repository: sl()),
+  );
+
+  sl.registerLazySingleton<SendPingUseCase>(
+    () => SendPingUseCase(
+      pingRepository: sl<PingRepository>(),
+      sessionRepository: sl<SessionRepository>(),
+    ),
   );
   // TODO: Add other core service registrations (like network checker, local storage, etc.) here as needed
 }

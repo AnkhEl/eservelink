@@ -46,3 +46,45 @@ class ReviewUpdateFailure extends Failure {
 class ReviewDeleteFailure extends Failure {
   const ReviewDeleteFailure(super.message);
 }
+
+class SessionFailure extends Failure {
+  const SessionFailure(super.message);
+}
+
+class TableNotFoundFailure extends Failure {
+  const TableNotFoundFailure() : super('Table not found');
+}
+
+class TableOccupiedFailure extends Failure {
+  const TableOccupiedFailure() : super('This table is currently occupied');
+}
+
+class SessionNotFoundFailure extends Failure {
+  const SessionNotFoundFailure() : super('Session not found');
+}
+
+class NoActiveSessionFailure extends Failure {
+  const NoActiveSessionFailure() : super('No active session found');
+}
+
+class InvalidQrCodeFailure extends Failure {
+  const InvalidQrCodeFailure() : super('Invalid QR code');
+}
+
+class SessionAlreadyActiveFailure extends Failure {
+  const SessionAlreadyActiveFailure()
+    : super('You already have an active session');
+}
+
+class UnauthorizedSessionAccessFailure extends Failure {
+  const UnauthorizedSessionAccessFailure()
+    : super('Unauthorized access to this session');
+}
+
+class PingFailure extends Failure {
+  const PingFailure(super.message);
+}
+
+class ChatFailure extends Failure {
+  const ChatFailure(super.message);
+}
