@@ -66,4 +66,10 @@ abstract class SessionRepository {
 
   /// Stream active session (real-time updates)
   Stream<Either<Failure, SessionEntity>> streamSession(String sessionId);
+
+  ///Get sessions by customer ID
+  Future<Either<Failure, List<SessionEntity>>> getUserSessions({
+    required String customerId,
+    int limit = 50,
+  });
 }

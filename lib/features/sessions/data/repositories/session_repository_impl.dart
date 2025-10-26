@@ -181,4 +181,20 @@ class SessionRepositoryImpl implements SessionRepository {
       return Stream.value(Left(SessionFailure(e.toString())));
     }
   }
+
+  @override
+  Future<Either<Failure, List<SessionEntity>>> getUserSessions({
+    required String customerId,
+    int limit = 50,
+  }) async {
+    try {
+      final sessions = await remoteDataSource.getUserSessions(
+        customerId: customerId,
+        limit: limit,
+      );
+      return Right(sessions);
+    } catch (e) {
+      return Left(SessionFailure(e.toString()));
+    }
+  }
 }

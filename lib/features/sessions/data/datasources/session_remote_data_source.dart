@@ -28,6 +28,10 @@ abstract class SessionRemoteDataSource {
   Future<void> completeSession(String sessionId);
   Future<void> cancelSession(String sessionId);
   Stream<SessionModel> streamSession(String sessionId);
+  Future<List<SessionModel>> getUserSessions({
+    required String customerId,
+    int limit = 50,
+  });
 }
 
 class SessionRemoteDataSourceImpl implements SessionRemoteDataSource {
@@ -335,6 +339,28 @@ class SessionRemoteDataSourceImpl implements SessionRemoteDataSource {
         return 'completed';
       case SessionStatus.cancelled:
         return 'cancelled';
+    }
+  }
+
+  @override
+  Future<List<SessionModel>> getUserSessions({
+    required String customerId,
+    int limit = 50,
+  }) async {
+    try {
+      final querySnapshot =
+          await firestore
+              .collection('sessions')
+              .where('customerId', isEqualTo: customerId)
+              .orderBy('startTime', descending: true)
+              .limit(limit)
+              .get();
+
+      return querySnapshot.docs
+          .map((doc) => SessionModel.fromFirestore(doc))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to get user sessions: $e');
     }
   }
 }

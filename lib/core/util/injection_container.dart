@@ -32,6 +32,7 @@ import 'package:eservelink/features/sessions/domain/repositories/ping_repository
 import 'package:eservelink/features/sessions/domain/repositories/session_repository.dart';
 import 'package:eservelink/features/sessions/domain/repositories/table_repository.dart';
 import 'package:eservelink/features/sessions/domain/usecases/get_active_session_usecase.dart';
+import 'package:eservelink/features/sessions/domain/usecases/get_user_sessions_usecase.dart';
 import 'package:eservelink/features/sessions/domain/usecases/join_session_as_waiter_usecase.dart';
 import 'package:eservelink/features/sessions/domain/usecases/scan_qr_and_create_session_usecase.dart';
 import 'package:eservelink/features/sessions/domain/usecases/send_chat_message_usecase.dart';
@@ -196,6 +197,9 @@ Future<void> init() async {
       pingRepository: sl<PingRepository>(),
       sessionRepository: sl<SessionRepository>(),
     ),
+  );
+  sl.registerLazySingleton<GetUserSessionsUseCase>(
+    () => GetUserSessionsUseCase(repository: sl<SessionRepository>()),
   );
   // TODO: Add other core service registrations (like network checker, local storage, etc.) here as needed
 }

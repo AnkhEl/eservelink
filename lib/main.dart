@@ -10,6 +10,7 @@ import 'package:eservelink/features/auth/domain/usecases/sign_out.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_event.dart';
 import 'package:eservelink/features/auth/presentation/components/auth_wrapper.dart';
+import 'package:eservelink/features/history/presentation/bloc/history_bloc.dart';
 import 'package:eservelink/features/home/domain/usecases/add_restaurant_usecase.dart';
 import 'package:eservelink/features/home/domain/usecases/get_nearby_restaurants_usecase.dart';
 import 'package:eservelink/features/home/domain/usecases/get_restaurant_by_id_usecase.dart';
@@ -18,6 +19,7 @@ import 'package:eservelink/features/onboarding/presentation/pages/onboarding_pag
 import 'package:eservelink/features/qr_scanner/presentation/bloc/qr_scanner_bloc.dart';
 import 'package:eservelink/features/sessions/domain/repositories/session_repository.dart';
 import 'package:eservelink/features/sessions/domain/usecases/get_active_session_usecase.dart';
+import 'package:eservelink/features/sessions/domain/usecases/get_user_sessions_usecase.dart';
 import 'package:eservelink/features/sessions/domain/usecases/scan_qr_and_create_session_usecase.dart';
 import 'package:eservelink/features/sessions/domain/usecases/send_ping_usecase.dart';
 import 'package:eservelink/features/sessions/presentation/bloc/session_bloc.dart';
@@ -80,6 +82,11 @@ class MyApp extends StatelessWidget {
                 sendPing: di.sl<SendPingUseCase>(),
                 sessionRepository: di.sl<SessionRepository>(),
               ),
+        ),
+        BlocProvider<HistoryBloc>(
+          create:
+              (_) =>
+                  HistoryBloc(getUserSessions: di.sl<GetUserSessionsUseCase>()),
         ),
       ],
       child: MaterialApp(
