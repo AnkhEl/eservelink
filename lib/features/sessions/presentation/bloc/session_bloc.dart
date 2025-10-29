@@ -23,6 +23,9 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     on<LoadActiveSessionEvent>(_onLoadActiveSession);
     on<SendPingEvent>(_onSendPing);
     on<CancelSessionEvent>(_onCancelSession);
+    on<ShowSessionWaitingEvent>(_onShowSessionWaiting);
+    on<ShowSessionActiveEvent>(_onShowSessionActive);
+    on<ShowSessionHomeEvent>(_onShowSessionHome);
   }
 
   Future<void> _onCreateSession(
@@ -128,5 +131,26 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
       (failure) => emit(SessionError(failure.message)),
       (_) => emit(NoActiveSession()),
     );
+  }
+
+  void _onShowSessionWaiting(
+      ShowSessionWaitingEvent event,
+      Emitter<SessionState> emit,
+      ) {
+    emit(SessionShowWaiting(event.session));
+  }
+
+  void _onShowSessionActive(
+      ShowSessionActiveEvent event,
+      Emitter<SessionState> emit,
+      ) {
+    emit(SessionShowActive(event.session));
+  }
+
+  void _onShowSessionHome(
+      ShowSessionHomeEvent event,
+      Emitter<SessionState> emit,
+      ) {
+    emit(SessionShowHome());
   }
 }

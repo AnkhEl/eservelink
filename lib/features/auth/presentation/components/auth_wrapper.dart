@@ -4,6 +4,10 @@ import 'package:eservelink/features/auth/presentation/pages/email_verification_p
 import 'package:eservelink/features/auth/presentation/pages/password_reset_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/register_page.dart';
 import 'package:eservelink/features/home/presentation/widgets/home_wrapper.dart';
+import 'package:eservelink/features/sessions/presentation/bloc/session_bloc.dart';
+import 'package:eservelink/features/sessions/presentation/bloc/session_state.dart';
+import 'package:eservelink/features/sessions/presentation/pages/session_active_page.dart';
+import 'package:eservelink/features/sessions/presentation/pages/session_waiting_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
@@ -68,10 +72,6 @@ class _AuthWrapperState extends State<AuthWrapper> {
           );
         }
 
-        if (state is AuthSuccess) {
-          return const HomeWrapper();
-        }
-
         if (state is AuthShowRegister) {
           return const RegisterPage();
         }
@@ -118,6 +118,30 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
         if (state is AuthFailure) {
           return _isOnRegisterPage ? const RegisterPage() : const LoginPage();
+        }
+
+        if (state is AuthSuccess) {
+
+          return BlocBuilder<SessionBloc, SessionState>(
+            builder: (context, sessionState) {
+              // Show session waiting page
+              if (sessionState is SessionShowWaiting) {
+                return SessionWaitingPage(session: sessionState.session);
+              }
+
+              // Show session active page
+              if (sessionState is SessionShowActive) {
+                return SessionActivePage(session: sessionState.session);
+              }
+
+              if(sessionState is SessionShowHome){
+                return const HomeWrapper();
+              }
+
+              // Default: Show home wrapper
+              return const HomeWrapper();
+            },
+          );
         }
 
         return const LoginPage();

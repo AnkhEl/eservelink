@@ -1,5 +1,10 @@
 import 'package:eservelink/features/sessions/domain/entities/session_entity.dart';
+import 'package:eservelink/features/sessions/presentation/bloc/session_bloc.dart';
+import 'package:eservelink/features/sessions/presentation/bloc/session_event.dart';
+import 'package:eservelink/features/sessions/presentation/pages/session_waiting_page.dart';
+import 'package:eservelink/features/sessions/presentation/pages/session_active_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class SessionHistoryCard extends StatelessWidget {
@@ -14,7 +19,7 @@ class SessionHistoryCard extends StatelessWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
-        onTap: () => _showSessionDetails(context),
+        onTap: () => _handleCardTap(context),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -203,6 +208,22 @@ class SessionHistoryCard extends StatelessWidget {
       return '${hours}h ${minutes}m';
     }
     return '${minutes}m';
+  }
+
+  void _handleCardTap(BuildContext context) {
+    // Navigate to appropriate page based on session status
+    if (session.status == SessionStatus.waitingForWaiter) {
+      context.read<SessionBloc>().add(
+        ShowSessionWaitingEvent(session),
+      );
+    } else if (session.status == SessionStatus.active) {
+      context.read<SessionBloc>().add(
+          ShowSessionActiveEvent(session)
+      );
+    } else {
+      // For completed/cancelled sessions, show details modal
+      _showSessionDetails(context);
+    }
   }
 
   void _showSessionDetails(BuildContext context) {

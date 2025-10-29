@@ -18,12 +18,7 @@ class SessionWaitingPage extends StatelessWidget {
       listener: (context, state) {
         if (state is SessionActive) {
           // Waiter joined! Navigate to active session
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SessionActivePage(session: state.session),
-            ),
-          );
+          context.read<SessionBloc>().add(ShowSessionActiveEvent(state.session));
         }
       },
       child: Scaffold(
@@ -31,6 +26,12 @@ class SessionWaitingPage extends StatelessWidget {
           title: Text('Table ${_extractTableNumber(session.tableId)}'),
           backgroundColor: Colors.deepPurple,
           foregroundColor: Colors.white,
+          leading: IconButton(
+              onPressed: (){
+                context.read<SessionBloc>().add(ShowSessionHomeEvent());
+              },
+              icon: Icon(Icons.arrow_back)
+          ),
           actions: [
             IconButton(
               icon: Icon(Icons.close),
@@ -213,7 +214,7 @@ class SessionWaitingPage extends StatelessWidget {
                     CancelSessionEvent(session.id),
                   );
                   Navigator.pop(dialogContext); // Close dialog
-                  Navigator.pop(context); // Close waiting page
+                  context.read<SessionBloc>().add(ShowSessionHomeEvent());
                 },
                 style: TextButton.styleFrom(foregroundColor: Colors.red),
                 child: Text('Yes, Cancel'),

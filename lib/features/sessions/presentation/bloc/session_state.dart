@@ -67,3 +67,25 @@ class PingSent extends SessionState {
   @override
   List<Object> get props => [session];
 }
+
+// Navigation States
+class SessionShowWaiting extends SessionState {
+  final SessionEntity session;
+
+  const SessionShowWaiting(this.session);
+
+  @override
+  List<Object?> get props => [session];
+}
+
+class SessionShowActive extends SessionState {
+  final SessionEntity session;
+
+  const SessionShowActive(this.session);
+
+  @override
+  List<Object?> get props => [session];
+}
+
+class SessionShowHome extends SessionState {}
+

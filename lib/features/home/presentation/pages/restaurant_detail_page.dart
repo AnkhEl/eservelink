@@ -33,6 +33,7 @@ class RestaurantDetailPage extends StatelessWidget {
           // App Bar with Image
           SliverAppBar(
             expandedHeight: 300,
+            toolbarHeight: 70,
             pinned: true,
             leading: Padding(
               padding: const EdgeInsets.only(left: 10),

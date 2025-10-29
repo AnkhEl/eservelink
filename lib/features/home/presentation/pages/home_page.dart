@@ -23,6 +23,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late List<Widget> pages;
+  static bool _hasCheckedSession = false;
 
   late Home home;
   late History history;
@@ -44,6 +45,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _checkForActiveSession() {
+    if (_hasCheckedSession) return;
+    _hasCheckedSession = true;
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthSuccess) {
       context.read<SessionBloc>().add(
@@ -86,20 +89,10 @@ class _HomePageState extends State<HomePage> {
       listener: (context, state) {
         if (state is SessionWaitingForWaiter) {
           // Navigate to waiting screen
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SessionWaitingPage(session: state.session),
-            ),
-          );
+          context.read<SessionBloc>().add(ShowSessionWaitingEvent(state.session));
         } else if (state is SessionActive) {
           // Navigate to active session screen
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => SessionActivePage(session: state.session),
-            ),
-          );
+          context.read<SessionBloc>().add(ShowSessionActiveEvent(state.session));
         } else if (state is SessionError) {
           // Show error
           ScaffoldMessenger.of(context).showSnackBar(
