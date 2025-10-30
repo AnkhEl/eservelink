@@ -47,11 +47,21 @@ class SessionRemoteDataSourceImpl implements SessionRemoteDataSource {
     required String customerName,
   }) async {
     try {
+      final restaurantDoc = await firestore.collection('restaurants').doc(restaurantId).get();
+
+      if (!restaurantDoc.exists) {
+        throw Exception('Restaurant not found');
+      }
+
+      final restaurantData = restaurantDoc.data()!;
+      final restaurantName = restaurantData['name'] ?? 'Unknown Restaurant';
+
       final docRef = firestore.collection('sessions').doc();
 
       final session = SessionModel(
         id: docRef.id,
         restaurantId: restaurantId,
+        restaurantName: restaurantName,
         tableId: tableId,
         customerId: customerId,
         customerName: customerName,

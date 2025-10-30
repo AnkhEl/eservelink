@@ -6,6 +6,7 @@ class SessionModel extends SessionEntity {
   const SessionModel({
     required super.id,
     required super.restaurantId,
+    super.restaurantName,
     required super.tableId,
     required super.customerId,
     required super.customerName,
@@ -21,7 +22,6 @@ class SessionModel extends SessionEntity {
     super.lastPingTime,
   });
 
-  // ✅ CORRECT - Business logic in MODEL, not entity
   bool get isWaitingForWaiter =>
       status == SessionStatus.waitingForWaiter && waiterId == null;
 
@@ -42,6 +42,7 @@ class SessionModel extends SessionEntity {
     return SessionModel(
       id: doc.id,
       restaurantId: data['restaurantId'] ?? '',
+      restaurantName: data['restaurantName'] ?? '',
       tableId: data['tableId'] ?? '',
       customerId: data['customerId'] ?? '',
       customerName: data['customerName'] ?? '',
@@ -72,6 +73,7 @@ class SessionModel extends SessionEntity {
   Map<String, dynamic> toFirestore() {
     return {
       'restaurantId': restaurantId,
+      'restaurantName': restaurantName,
       'tableId': tableId,
       'customerId': customerId,
       'customerName': customerName,
@@ -95,6 +97,7 @@ class SessionModel extends SessionEntity {
     return SessionModel(
       id: entity.id,
       restaurantId: entity.restaurantId,
+      restaurantName: entity.restaurantName,
       tableId: entity.tableId,
       customerId: entity.customerId,
       customerName: entity.customerName,

@@ -49,7 +49,7 @@ class SessionHistoryCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _extractTableNumber(),
+                          session.restaurantName??"Unknown Restaurant",
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

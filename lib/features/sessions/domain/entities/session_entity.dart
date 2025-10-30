@@ -4,6 +4,7 @@ import 'package:eservelink/features/sessions/domain/entities/order_item.dart';
 class SessionEntity extends Equatable {
   final String id;
   final String restaurantId;
+  final String? restaurantName;
   final String tableId;
   final String customerId;
   final String customerName;
@@ -21,6 +22,7 @@ class SessionEntity extends Equatable {
   const SessionEntity({
     required this.id,
     required this.restaurantId,
+    this.restaurantName,
     required this.tableId,
     required this.customerId,
     required this.customerName,
@@ -40,6 +42,7 @@ class SessionEntity extends Equatable {
   List<Object?> get props => [
     id,
     restaurantId,
+    restaurantName,
     tableId,
     customerId,
     customerName,
