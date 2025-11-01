@@ -12,15 +12,22 @@ class AddRestaurantUseCase implements UseCase<void, AddRestaurantParams> {
 
   @override
   Future<Either<Failure, void>> call(AddRestaurantParams params) async {
-    return await repository.addRestaurant(restaurant: params.restaurant);
+    return await repository.addRestaurant(
+      restaurant: params.restaurant,
+      restaurantAdminId: params.restaurantAdminId,
+    );
   }
 }
 
 class AddRestaurantParams extends Equatable {
   final RestaurantEntity restaurant;
+  final String restaurantAdminId;
 
-  const AddRestaurantParams({required this.restaurant});
+  const AddRestaurantParams({
+    required this.restaurant,
+    required this.restaurantAdminId,
+  });
 
   @override
-  List<Object> get props => [restaurant];
+  List<Object> get props => [restaurant, restaurantAdminId];
 }
