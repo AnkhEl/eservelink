@@ -11,7 +11,10 @@ abstract class RestaurantRemoteDataSource {
 
   Future<RestaurantModel> getRestaurantById({required String restaurantId});
 
-  Future<void> addRestaurant({required RestaurantModel restaurant});
+  Future<void> addRestaurant({
+    required RestaurantModel restaurant,
+    required String restaurantAdminId,
+  });
 }
 
 class RestaurantRemoteDataSourceImpl implements RestaurantRemoteDataSource {
@@ -77,9 +80,15 @@ class RestaurantRemoteDataSourceImpl implements RestaurantRemoteDataSource {
   }
 
   @override
-  Future<void> addRestaurant({required RestaurantModel restaurant}) async {
+  Future<void> addRestaurant({
+    required RestaurantModel restaurant,
+    required String restaurantAdminId,
+  }) async {
     try {
-      await firestore.collection('restaurants').add(restaurant.toFirestore());
+      final data =
+          restaurant.toFirestore()..['restaurant_admin_id'] = restaurantAdminId;
+
+      await firestore.collection('restaurants').add(data);
     } catch (e) {
       throw Exception('Error adding restaurant: $e');
     }

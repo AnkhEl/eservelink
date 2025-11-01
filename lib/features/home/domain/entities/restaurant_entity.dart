@@ -17,6 +17,7 @@ class RestaurantEntity extends Equatable {
   final String geohash;
   final bool isActive;
   final DateTime createdAt;
+  final String restaurantAdminId;
 
   const RestaurantEntity({
     required this.id,
@@ -34,6 +35,7 @@ class RestaurantEntity extends Equatable {
     required this.geohash,
     required this.isActive,
     required this.createdAt,
+    required this.restaurantAdminId,
   });
 
   @override
@@ -53,5 +55,6 @@ class RestaurantEntity extends Equatable {
     geohash,
     isActive,
     createdAt,
+    restaurantAdminId,
   ];
 }

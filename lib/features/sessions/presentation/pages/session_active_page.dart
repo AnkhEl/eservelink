@@ -16,6 +16,12 @@ class SessionActivePage extends StatelessWidget {
         title: Text('Table ${_extractTableNumber(session.tableId)}'),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () {
+            context.read<SessionBloc>().add(ShowSessionHomeEvent());
+          },
+          icon: Icon(Icons.arrow_back),
+        ),
       ),
       body: Center(
         child: Padding(

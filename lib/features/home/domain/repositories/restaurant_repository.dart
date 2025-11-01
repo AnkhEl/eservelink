@@ -15,5 +15,6 @@ abstract class RestaurantRepository {
 
   Future<Either<Failure, void>> addRestaurant({
     required RestaurantEntity restaurant,
+    required String restaurantAdminId,
   });
 }

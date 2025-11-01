@@ -18,6 +18,7 @@ class RestaurantModel extends RestaurantEntity {
     required super.geohash,
     required super.isActive,
     required super.createdAt,
+    required super.restaurantAdminId,
   });
 
   /// Convert Firestore document to RestaurantModel
@@ -42,6 +43,7 @@ class RestaurantModel extends RestaurantEntity {
       geohash: position?['geohash'] ?? '', // 👈 updated
       isActive: data['isActive'] ?? true,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
+      restaurantAdminId: data['restaurant_admin_id'] ?? '',
     );
   }
 
@@ -61,6 +63,7 @@ class RestaurantModel extends RestaurantEntity {
       'position': {'geopoint': geolocation, 'geohash': geohash},
       'isActive': isActive,
       'createdAt': Timestamp.fromDate(createdAt),
+      'restaurant_admin_id': restaurantAdminId,
     };
   }
 
@@ -82,6 +85,7 @@ class RestaurantModel extends RestaurantEntity {
       geohash: entity.geohash,
       isActive: entity.isActive,
       createdAt: entity.createdAt,
+      restaurantAdminId: entity.restaurantAdminId,
     );
   }
 }

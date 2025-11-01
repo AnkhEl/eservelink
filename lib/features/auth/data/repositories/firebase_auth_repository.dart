@@ -20,16 +20,55 @@ class FirebaseAuthRepository implements AuthRepository {
     required this.userRepository,
   });
 
-  UserEntity? _userFromFirebaseUser(firebase_auth.User? user) {
-    if (user == null) return null;
-    return UserEntity(
-      uid: user.uid,
-      email: user.email!,
-      displayName: user.displayName,
-      photoUrl: user.photoURL ?? "",
-      role: 'customer',
-      emailVerified: user.emailVerified,
-    );
+  /// Get complete user by merging Firebase Auth with Firestore data
+  Future<UserEntity?> _getCompleteUser(firebase_auth.User? firebaseUser) async {
+    if (firebaseUser == null) return null;
+
+    try {
+      // Try to get user from Firestore (has role, restaurantId, etc.)
+      final firestoreUserResult = await userRepository.getUserById(
+        firebaseUser.uid,
+      );
+
+      return firestoreUserResult.fold(
+        // If Firestore fetch fails, create basic user from Firebase Auth
+        (failure) {
+          return UserEntity(
+            uid: firebaseUser.uid,
+            email: firebaseUser.email!,
+            displayName: firebaseUser.displayName,
+            photoUrl: firebaseUser.photoURL,
+            role: 'customer', // Default for new users
+            emailVerified: firebaseUser.emailVerified,
+            restaurantId: null,
+          );
+        },
+        // If Firestore user exists, merge with latest Firebase Auth data
+        (firestoreUser) {
+          // Merge: Use Firestore data (role, restaurantId) + Firebase Auth data (emailVerified, etc.)
+          return UserEntity(
+            uid: firebaseUser.uid,
+            email: firebaseUser.email!,
+            displayName: firebaseUser.displayName ?? firestoreUser.displayName,
+            photoUrl: firebaseUser.photoURL ?? firestoreUser.photoUrl,
+            role: firestoreUser.role,
+            emailVerified: firebaseUser.emailVerified,
+            restaurantId: firestoreUser.restaurantId,
+          );
+        },
+      );
+    } catch (e) {
+      // Fallback to basic user
+      return UserEntity(
+        uid: firebaseUser.uid,
+        email: firebaseUser.email!,
+        displayName: firebaseUser.displayName,
+        photoUrl: firebaseUser.photoURL,
+        role: 'customer',
+        emailVerified: firebaseUser.emailVerified,
+        restaurantId: null,
+      );
+    }
   }
 
   @override
@@ -42,7 +81,8 @@ class FirebaseAuthRepository implements AuthRepository {
         email: email,
         password: password,
       );
-      return Right(_userFromFirebaseUser(creds.user));
+      final user = await _getCompleteUser(creds.user);
+      return Right(user);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -61,12 +101,17 @@ class FirebaseAuthRepository implements AuthRepository {
       );
 
       await creds.user!.updateDisplayName(name);
-      await creds.user!.reload(); // Ensure the changes reflect
+      await creds.user!.reload();
       await creds.user!.sendEmailVerification();
+
       final updatedUser = firebaseAuth.currentUser;
-      final updatedUserEntity = _userFromFirebaseUser(updatedUser);
-      await userRepository.saveUserIfNotExists(updatedUserEntity!);
-      return Right(updatedUserEntity);
+      final completeUser = await _getCompleteUser(updatedUser);
+
+      if (completeUser != null) {
+        await userRepository.saveUserIfNotExists(completeUser);
+      }
+
+      return Right(completeUser);
     } on firebase_auth.FirebaseAuthException catch (e) {
       return Left(ServerFailure(_mapFirebaseAuthError(e.code)));
     } catch (_) {
@@ -86,12 +131,17 @@ class FirebaseAuthRepository implements AuthRepository {
         idToken: googleUser.authentication.idToken,
         accessToken: authorization?.accessToken,
       );
-      // Firebase sign‑in
+
       final creds = await firebase_auth.FirebaseAuth.instance
           .signInWithCredential(credential);
-      final userEntity = _userFromFirebaseUser(creds.user);
-      await userRepository.saveUserIfNotExists(userEntity!);
-      return Right(userEntity);
+
+      final completeUser = await _getCompleteUser(creds.user);
+
+      if (completeUser != null) {
+        await userRepository.saveUserIfNotExists(completeUser);
+      }
+
+      return Right(completeUser);
     } on GoogleSignInException catch (e) {
       return Left(ServerFailure('Google sign-in failed: ${e.code.name}'));
     } on firebase_auth.FirebaseAuthException catch (e) {
@@ -122,7 +172,13 @@ class FirebaseAuthRepository implements AuthRepository {
       );
 
       final creds = await firebaseAuth.signInWithCredential(credential);
-      return Right(_userFromFirebaseUser(creds.user));
+      final completeUser = await _getCompleteUser(creds.user);
+
+      if (completeUser != null) {
+        await userRepository.saveUserIfNotExists(completeUser);
+      }
+
+      return Right(completeUser);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -140,7 +196,6 @@ class FirebaseAuthRepository implements AuthRepository {
   }
 
   @override
-  @override
   Future<Either<Failure, UserEntity?>> getCurrentUser() async {
     try {
       final firebaseUser = firebaseAuth.currentUser;
@@ -149,15 +204,15 @@ class FirebaseAuthRepository implements AuthRepository {
         try {
           await firebaseUser.reload();
           final refreshedUser = firebaseAuth.currentUser;
-
           final userToUse = refreshedUser ?? firebaseUser;
 
-          final userEntity = _userFromFirebaseUser(userToUse);
-
-          return Right(userEntity);
+          // Get complete user with Firestore data
+          final completeUser = await _getCompleteUser(userToUse);
+          return Right(completeUser);
         } catch (reloadError) {
-          final userEntity = _userFromFirebaseUser(firebaseUser);
-          return Right(userEntity);
+          // If reload fails, still try to get complete user
+          final completeUser = await _getCompleteUser(firebaseUser);
+          return Right(completeUser);
         }
       }
 

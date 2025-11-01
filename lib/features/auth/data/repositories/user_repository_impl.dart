@@ -26,7 +26,7 @@ class UserRepositoryImpl implements UserRepository {
           role: user.role,
           emailVerified: user.emailVerified,
         );
-        await docRef.set(userModel.toMap());
+        await docRef.set(userModel.toFirestore());
       }
 
       return const Right(null);
@@ -43,8 +43,7 @@ class UserRepositoryImpl implements UserRepository {
         return Left(ServerFailure('User not found'));
       }
 
-      final data = doc.data()!;
-      final userModel = UserModel.fromMap(data);
+      final userModel = UserModel.fromFirestore(doc);
       return Right(userModel);
     } catch (e) {
       return Left(ServerFailure('Failed to fetch user: $e'));

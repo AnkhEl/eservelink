@@ -48,7 +48,7 @@ class SessionModel extends SessionEntity {
       customerName: data['customerName'] ?? '',
       waiterId: data['waiterId'],
       waiterName: data['waiterName'],
-      status: _statusFromString(data['status'] ?? 'waitingForWaiter'),
+      status: statusFromString(data['status'] ?? 'waitingForWaiter'),
       startTime: (data['startTime'] as Timestamp).toDate(),
       endTime:
           data['endTime'] != null
@@ -79,7 +79,7 @@ class SessionModel extends SessionEntity {
       'customerName': customerName,
       'waiterId': waiterId,
       'waiterName': waiterName,
-      'status': _statusToString(status),
+      'status': statusToString(status),
       'startTime': Timestamp.fromDate(startTime),
       'endTime': endTime != null ? Timestamp.fromDate(endTime!) : null,
       'totalAmount': totalAmount,
@@ -114,8 +114,29 @@ class SessionModel extends SessionEntity {
     );
   }
 
+  SessionEntity toEntity() {
+    return SessionEntity(
+      id: id,
+      restaurantId: restaurantId,
+      restaurantName: restaurantName,
+      tableId: tableId,
+      customerId: customerId,
+      customerName: customerName,
+      waiterId: waiterId,
+      waiterName: waiterName,
+      status: status,
+      startTime: startTime,
+      endTime: endTime,
+      totalAmount: totalAmount,
+      items: items,
+      isPaid: isPaid,
+      canReview: canReview,
+      lastPingTime: lastPingTime,
+    );
+  }
+
   // Helper methods
-  static SessionStatus _statusFromString(String status) {
+  static SessionStatus statusFromString(String status) {
     switch (status) {
       case 'waitingForWaiter':
         return SessionStatus.waitingForWaiter;
@@ -132,7 +153,7 @@ class SessionModel extends SessionEntity {
     }
   }
 
-  static String _statusToString(SessionStatus status) {
+  static String statusToString(SessionStatus status) {
     switch (status) {
       case SessionStatus.waitingForWaiter:
         return 'waitingForWaiter';

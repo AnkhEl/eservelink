@@ -7,6 +7,7 @@ class UserEntity extends Equatable {
   final String? photoUrl;
   final String role; // 'admin', 'cu', 'customer'
   final bool emailVerified;
+  final String? restaurantId;
 
   const UserEntity({
     required this.uid,
@@ -15,6 +16,7 @@ class UserEntity extends Equatable {
     this.photoUrl,
     required this.role,
     required this.emailVerified,
+    this.restaurantId,
   });
 
   @override
@@ -25,5 +27,6 @@ class UserEntity extends Equatable {
     photoUrl,
     role,
     emailVerified,
+    restaurantId,
   ];
 }

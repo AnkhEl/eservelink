@@ -64,10 +64,14 @@ class RestaurantRepositoryImpl implements RestaurantRepository {
   @override
   Future<Either<Failure, void>> addRestaurant({
     required RestaurantEntity restaurant,
+    required String restaurantAdminId,
   }) async {
     try {
       final restaurantModel = RestaurantModel.fromEntity(restaurant);
-      await remoteDataSource.addRestaurant(restaurant: restaurantModel);
+      await remoteDataSource.addRestaurant(
+        restaurant: restaurantModel,
+        restaurantAdminId: restaurantAdminId,
+      );
       return const Right(null);
     } on Exception catch (e) {
       return Left(ServerFailure(e.toString()));

@@ -8,6 +8,7 @@ import 'package:eservelink/features/sessions/presentation/bloc/session_bloc.dart
 import 'package:eservelink/features/sessions/presentation/bloc/session_state.dart';
 import 'package:eservelink/features/sessions/presentation/pages/session_active_page.dart';
 import 'package:eservelink/features/sessions/presentation/pages/session_waiting_page.dart';
+import 'package:eservelink/features/waiter/presentation/widgets/waiter_home_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
@@ -121,6 +122,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
         }
 
         if (state is AuthSuccess) {
+          final user = state.user;
+
+          if (user.role == 'company_user') {
+            return WaiterHomeWrapper();
+          }
+
+          if (user.role == 'admin') {
+            /// TODO: We wilL return an AdminHomeWrapper()
+          }
 
           return BlocBuilder<SessionBloc, SessionState>(
             builder: (context, sessionState) {
