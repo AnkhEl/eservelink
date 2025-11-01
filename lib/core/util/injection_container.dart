@@ -37,6 +37,14 @@ import 'package:eservelink/features/sessions/domain/usecases/join_session_as_wai
 import 'package:eservelink/features/sessions/domain/usecases/scan_qr_and_create_session_usecase.dart';
 import 'package:eservelink/features/sessions/domain/usecases/send_chat_message_usecase.dart';
 import 'package:eservelink/features/sessions/domain/usecases/send_ping_usecase.dart';
+import 'package:eservelink/features/waiter/data/datasources/waiter_remote_data_source.dart';
+import 'package:eservelink/features/waiter/data/repositories/waiter_repository_impl.dart';
+import 'package:eservelink/features/waiter/domain/repositories/waiter_repository.dart';
+import 'package:eservelink/features/waiter/domain/usecases/end_session_usecase.dart';
+import 'package:eservelink/features/waiter/domain/usecases/get_waiter_active_sessions_usecase.dart';
+import 'package:eservelink/features/waiter/domain/usecases/get_waiting_sessions_usecase.dart';
+import 'package:eservelink/features/waiter/domain/usecases/join_session_usecase.dart';
+import 'package:eservelink/features/waiter/presentation/bloc/waiter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -85,6 +93,10 @@ Future<void> init() async {
     () => PingRemoteDataSourceImpl(firestore: sl<FirebaseFirestore>()),
   );
 
+  sl.registerLazySingleton<WaiterRemoteDataSource>(
+    () => WaiterRemoteDataSourceImpl(firestore: sl<FirebaseFirestore>()),
+  );
+
   // Repositories
   sl.registerLazySingleton<UserRepository>(
     () => UserRepositoryImpl(firestore: sl<FirebaseFirestore>()),
@@ -126,6 +138,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<PingRepository>(
     () => PingRepositoryImpl(remoteDataSource: sl<PingRemoteDataSource>()),
+  );
+
+  sl.registerLazySingleton<WaiterRepository>(
+    () => WaiterRepositoryImpl(remoteDataSource: sl<WaiterRemoteDataSource>()),
   );
 
   // Use Cases
@@ -200,6 +216,22 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<GetUserSessionsUseCase>(
     () => GetUserSessionsUseCase(repository: sl<SessionRepository>()),
+  );
+
+  sl.registerLazySingleton(() => GetWaitingSessionsUseCase(sl()));
+  sl.registerLazySingleton(() => GetWaiterActiveSessionsUseCase(sl()));
+  sl.registerLazySingleton(() => JoinSessionUseCase(sl()));
+  sl.registerLazySingleton(() => EndSessionUseCase(sl()));
+
+  //Blocs
+
+  sl.registerFactory<WaiterBloc>(
+    () => WaiterBloc(
+      getWaitingSessions: sl(),
+      getWaiterActiveSessions: sl(),
+      joinSession: sl(),
+      endSession: sl(),
+    ),
   );
   // TODO: Add other core service registrations (like network checker, local storage, etc.) here as needed
 }

@@ -23,6 +23,7 @@ import 'package:eservelink/features/sessions/domain/usecases/get_user_sessions_u
 import 'package:eservelink/features/sessions/domain/usecases/scan_qr_and_create_session_usecase.dart';
 import 'package:eservelink/features/sessions/domain/usecases/send_ping_usecase.dart';
 import 'package:eservelink/features/sessions/presentation/bloc/session_bloc.dart';
+import 'package:eservelink/features/waiter/presentation/bloc/waiter_bloc.dart';
 import 'package:eservelink/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:eservelink/core/util/injection_container.dart' as di;
@@ -88,6 +89,7 @@ class MyApp extends StatelessWidget {
               (_) =>
                   HistoryBloc(getUserSessions: di.sl<GetUserSessionsUseCase>()),
         ),
+        BlocProvider<WaiterBloc>(create: (_) => di.sl<WaiterBloc>()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
