@@ -1,140 +1,182 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eservelink/features/sessions/data/models/session_model.dart';
 import 'package:eservelink/features/sessions/domain/entities/session_entity.dart';
 import 'package:eservelink/features/sessions/presentation/bloc/session_bloc.dart';
 import 'package:eservelink/features/sessions/presentation/bloc/session_event.dart';
-import 'package:eservelink/features/sessions/presentation/bloc/session_state.dart';
-import 'package:eservelink/features/sessions/presentation/pages/session_active_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lottie/lottie.dart';
 
-class SessionWaitingPage extends StatelessWidget {
+class SessionWaitingPage extends StatefulWidget {
   final SessionEntity session;
 
   const SessionWaitingPage({super.key, required this.session});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocListener<SessionBloc, SessionState>(
-      listener: (context, state) {
-        if (state is SessionActive) {
-          // Waiter joined! Navigate to active session
-          context.read<SessionBloc>().add(ShowSessionActiveEvent(state.session));
-        }
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Table ${_extractTableNumber(session.tableId)}'),
-          backgroundColor: Colors.deepPurple,
-          foregroundColor: Colors.white,
-          leading: IconButton(
-              onPressed: (){
-                context.read<SessionBloc>().add(ShowSessionHomeEvent());
-              },
-              icon: Icon(Icons.arrow_back)
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.close),
-              onPressed: () => _showCancelDialog(context),
-            ),
-          ],
-        ),
-        body: SingleChildScrollView(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Lottie.asset('assets/animations/waiting.json',),
+  State<SessionWaitingPage> createState() => _SessionWaitingPageState();
+}
 
-                  // Title
-                  Text(
-                    'Waiting for Waiter',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
-                    ),
-                    textAlign: TextAlign.center,
+class _SessionWaitingPageState extends State<SessionWaitingPage> {
+  StreamSubscription<DocumentSnapshot>? _sessionSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _listenToSessionChanges();
+  }
+
+  @override
+  void dispose() {
+    _sessionSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _listenToSessionChanges() {
+    _sessionSubscription = FirebaseFirestore.instance
+        .collection('sessions')
+        .doc(widget.session.id)
+        .snapshots()
+        .listen((snapshot) {
+          if (!mounted) return;
+
+          if (snapshot.exists) {
+            final data = snapshot.data()!;
+            final status = data['status'] as String?;
+
+            // When waiter joins, status changes to 'active'
+            if (status == 'active') {
+              // Convert snapshot to SessionEntity
+              final updatedSession = SessionModel.fromFirestore(snapshot);
+
+              // Navigate to active page
+              context.read<SessionBloc>().add(
+                ShowSessionActiveEvent(updatedSession),
+              );
+            }
+          }
+        }, onError: (error) {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Table ${_extractTableNumber(widget.session.tableId)}'),
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () {
+            context.read<SessionBloc>().add(ShowSessionHomeEvent());
+          },
+          icon: Icon(Icons.arrow_back),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.close),
+            onPressed: () => _showCancelDialog(context),
+          ),
+        ],
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Loading animation
+              SizedBox(
+                height: 200,
+                width: 200,
+                child: CircularProgressIndicator(
+                  strokeWidth: 8,
+                  color: Colors.deepPurple,
+                ),
+              ),
+
+              SizedBox(height: 40),
+
+              // Title
+              Text(
+                'Waiting for Waiter',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              SizedBox(height: 16),
+
+              // Description
+              Text(
+                'Your table session has been created!\nA waiter will join shortly to assist you.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[700],
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              SizedBox(height: 40),
+
+              // Session info card
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      _buildInfoRow(
+                        Icons.table_restaurant,
+                        'Table',
+                        _extractTableNumber(widget.session.tableId),
+                      ),
+                      Divider(height: 24),
+                      _buildInfoRow(
+                        Icons.person,
+                        'Customer',
+                        widget.session.customerName,
+                      ),
+                      Divider(height: 24),
+                      _buildInfoRow(
+                        Icons.access_time,
+                        'Started',
+                        _formatTime(widget.session.startTime),
+                      ),
+                    ],
                   ),
-          
-                  SizedBox(height: 10),
-          
-                  // Description
-                  Text(
-                    'Your table session has been created!\nA waiter will join shortly to assist you.',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[700],
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-          
-                  SizedBox(height: 10),
-          
-                  // Session info card
-                  Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        children: [
-                          _buildInfoRow(
-                            Icons.table_restaurant,
-                            'Table',
-                            _extractTableNumber(session.tableId),
-                          ),
-                          Divider(height: 24),
-                          _buildInfoRow(
-                            Icons.person,
-                            'Customer',
-                            session.customerName,
-                          ),
-                          Divider(height: 24),
-                          _buildInfoRow(
-                            Icons.access_time,
-                            'Started',
-                            _formatTime(session.startTime),
-                          ),
-                        ],
+                ),
+              ),
+
+              SizedBox(height: 32),
+
+              // Tip text
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.blue),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Once a waiter scans your table QR, you\'ll be connected automatically!',
+                        style: TextStyle(fontSize: 14, color: Colors.blue[900]),
                       ),
                     ),
-                  ),
-          
-                  SizedBox(height: 15),
-          
-                  // Tip text
-                  Container(
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info_outline, color: Colors.blue),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Once a waiter scans your table QR, you\'ll be connected!',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.blue[900],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -202,7 +244,7 @@ class SessionWaitingPage extends StatelessWidget {
               TextButton(
                 onPressed: () {
                   context.read<SessionBloc>().add(
-                    CancelSessionEvent(session.id),
+                    CancelSessionEvent(widget.session.id),
                   );
                   Navigator.pop(dialogContext); // Close dialog
                   context.read<SessionBloc>().add(ShowSessionHomeEvent());

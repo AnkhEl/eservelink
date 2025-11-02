@@ -1,96 +1,117 @@
+import 'dart:async';
 import 'package:eservelink/features/waiter/domain/entities/waiter_session_entity.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:eservelink/features/waiter/domain/usecases/get_waiting_sessions_usecase.dart';
-import 'package:eservelink/features/waiter/domain/usecases/get_waiter_active_sessions_usecase.dart';
+import 'package:eservelink/features/waiter/domain/repositories/waiter_repository.dart';
 import 'package:eservelink/features/waiter/domain/usecases/join_session_usecase.dart';
 import 'package:eservelink/features/waiter/domain/usecases/end_session_usecase.dart';
 import 'package:eservelink/features/waiter/presentation/bloc/waiter_event.dart';
 import 'package:eservelink/features/waiter/presentation/bloc/waiter_state.dart';
 
 class WaiterBloc extends Bloc<WaiterEvent, WaiterState> {
-  final GetWaitingSessionsUseCase getWaitingSessions;
-  final GetWaiterActiveSessionsUseCase getWaiterActiveSessions;
+  final WaiterRepository repository;
   final JoinSessionUseCase joinSession;
   final EndSessionUseCase endSession;
 
+  // Stream subscriptions for real-time updates
+  StreamSubscription? _waitingSessionsSubscription;
+  StreamSubscription? _activeSessionsSubscription;
+
+  // Cache current sessions for state transitions
+  List<WaiterSessionEntity> _currentWaitingSessions = [];
+  List<WaiterSessionEntity> _currentActiveSessions = [];
+
   WaiterBloc({
-    required this.getWaitingSessions,
-    required this.getWaiterActiveSessions,
+    required this.repository,
     required this.joinSession,
     required this.endSession,
   }) : super(WaiterInitial()) {
-    on<LoadWaitingSessionsEvent>(_onLoadWaitingSessions);
-    on<LoadWaiterActiveSessionsEvent>(_onLoadWaiterActiveSessions);
+    on<StartWatchingSessionsEvent>(_onStartWatchingSessions);
+    on<StopWatchingSessionsEvent>(_onStopWatchingSessions);
+    on<SessionsUpdatedEvent>(_onSessionsUpdated);
     on<JoinSessionEvent>(_onJoinSession);
     on<EndSessionEvent>(_onEndSession);
-    on<RefreshSessionsEvent>(_onRefreshSessions);
+    on<ShowWaiterSessionEvent>(_onShowWaiterSession);
+    on<ShowWaiterHomeEvent>(_onShowWaiterHome);
   }
 
-  Future<void> _onLoadWaitingSessions(
-    LoadWaitingSessionsEvent event,
+  Future<void> _onStartWatchingSessions(
+    StartWatchingSessionsEvent event,
     Emitter<WaiterState> emit,
   ) async {
-    // Don't show loading if we already have sessions
-    if (state is! WaiterSessionsLoaded) {
-      emit(WaiterLoading());
-    }
+    // Cancel existing subscriptions
+    await _waitingSessionsSubscription?.cancel();
+    await _activeSessionsSubscription?.cancel();
 
-    final result = await getWaitingSessions(
-      GetWaitingSessionsParams(restaurantId: event.restaurantId),
-    );
+    // Start watching waiting sessions
+    _waitingSessionsSubscription = repository
+        .watchWaitingSessions(restaurantId: event.restaurantId)
+        .listen((result) {
+          result.fold(
+            (failure) {
+              add(
+                SessionsUpdatedEvent(
+                  waitingSessions: [],
+                  activeSessions: _currentActiveSessions,
+                ),
+              );
+            },
+            (sessions) {
+              _currentWaitingSessions = sessions;
+              add(
+                SessionsUpdatedEvent(
+                  waitingSessions: sessions,
+                  activeSessions: _currentActiveSessions,
+                ),
+              );
+            },
+          );
+        }, onError: (error) {});
 
-    result.fold(
-      (failure) {
-        emit(WaiterError(failure.message));
-      },
-      (waitingSessions) {
-        // Preserve active sessions if we have them
-        final currentActiveSessions =
-            state is WaiterSessionsLoaded
-                ? (state as WaiterSessionsLoaded).activeSessions
-                : <WaiterSessionEntity>[];
-
-        emit(
-          WaiterSessionsLoaded(
-            waitingSessions: waitingSessions,
-            activeSessions: currentActiveSessions,
-          ),
-        );
-      },
-    );
+    // Start watching active sessions
+    _activeSessionsSubscription = repository
+        .watchWaiterActiveSessions(waiterId: event.waiterId)
+        .listen((result) {
+          result.fold(
+            (failure) {
+              add(
+                SessionsUpdatedEvent(
+                  waitingSessions: _currentWaitingSessions,
+                  activeSessions: [],
+                ),
+              );
+            },
+            (sessions) {
+              _currentActiveSessions = sessions;
+              add(
+                SessionsUpdatedEvent(
+                  waitingSessions: _currentWaitingSessions,
+                  activeSessions: sessions,
+                ),
+              );
+            },
+          );
+        }, onError: (error) {});
   }
 
-  Future<void> _onLoadWaiterActiveSessions(
-    LoadWaiterActiveSessionsEvent event,
+  void _onStopWatchingSessions(
+    StopWatchingSessionsEvent event,
     Emitter<WaiterState> emit,
-  ) async {
-    // Don't show loading if we already have sessions
-    if (state is! WaiterSessionsLoaded) {
-      emit(WaiterLoading());
-    }
+  ) {
+    _waitingSessionsSubscription?.cancel();
+    _activeSessionsSubscription?.cancel();
+    _waitingSessionsSubscription = null;
+    _activeSessionsSubscription = null;
+  }
 
-    final result = await getWaiterActiveSessions(
-      GetWaiterActiveSessionsParams(waiterId: event.waiterId),
-    );
-
-    result.fold(
-      (failure) {
-        emit(WaiterError(failure.message));
-      },
-      (activeSessions) {
-        // Preserve waiting sessions if we have them
-        final currentWaitingSessions =
-            state is WaiterSessionsLoaded
-                ? (state as WaiterSessionsLoaded).waitingSessions
-                : <WaiterSessionEntity>[];
-
-        emit(
-          WaiterSessionsLoaded(
-            waitingSessions: currentWaitingSessions,
-            activeSessions: activeSessions,
-          ),
-        );
-      },
+  void _onSessionsUpdated(
+    SessionsUpdatedEvent event,
+    Emitter<WaiterState> emit,
+  ) {
+    emit(
+      WaiterSessionsLoaded(
+        waitingSessions: event.waitingSessions,
+        activeSessions: event.activeSessions,
+      ),
     );
   }
 
@@ -98,8 +119,6 @@ class WaiterBloc extends Bloc<WaiterEvent, WaiterState> {
     JoinSessionEvent event,
     Emitter<WaiterState> emit,
   ) async {
-    emit(WaiterLoading());
-
     final result = await joinSession(
       JoinSessionParams(
         tableId: event.tableId,
@@ -113,6 +132,7 @@ class WaiterBloc extends Bloc<WaiterEvent, WaiterState> {
         emit(WaiterError(failure.message));
       },
       (session) {
+        // Just emit success - UI will handle it and streams will update
         emit(SessionJoined(session));
       },
     );
@@ -122,8 +142,6 @@ class WaiterBloc extends Bloc<WaiterEvent, WaiterState> {
     EndSessionEvent event,
     Emitter<WaiterState> emit,
   ) async {
-    emit(WaiterLoading());
-
     final result = await endSession(
       EndSessionParams(sessionId: event.sessionId),
     );
@@ -133,40 +151,30 @@ class WaiterBloc extends Bloc<WaiterEvent, WaiterState> {
         emit(WaiterError(failure.message));
       },
       (_) {
+        // Just emit success - UI will handle it and streams will update
         emit(const SessionEnded('Session completed successfully'));
       },
     );
   }
 
-  Future<void> _onRefreshSessions(
-    RefreshSessionsEvent event,
+  @override
+  Future<void> close() {
+    _waitingSessionsSubscription?.cancel();
+    _activeSessionsSubscription?.cancel();
+    return super.close();
+  }
+
+  FutureOr<void> _onShowWaiterSession(
+    ShowWaiterSessionEvent event,
     Emitter<WaiterState> emit,
-  ) async {
-    // Load both waiting and active sessions
-    final waitingResult = await getWaitingSessions(
-      GetWaitingSessionsParams(restaurantId: event.restaurantId),
-    );
+  ) {
+    emit(ShowWaiterSessionPage(event.session));
+  }
 
-    final activeResult = await getWaiterActiveSessions(
-      GetWaiterActiveSessionsParams(waiterId: event.waiterId),
-    );
-
-    // Combine results
-    final waitingSessions = waitingResult.fold(
-      (_) => <WaiterSessionEntity>[],
-      (sessions) => sessions,
-    );
-
-    final activeSessions = activeResult.fold(
-      (_) => <WaiterSessionEntity>[],
-      (sessions) => sessions,
-    );
-
-    emit(
-      WaiterSessionsLoaded(
-        waitingSessions: waitingSessions,
-        activeSessions: activeSessions,
-      ),
-    );
+  FutureOr<void> _onShowWaiterHome(
+    ShowWaiterHomeEvent event,
+    Emitter<WaiterState> emit,
+  ) {
+    emit(ShowWaiterHomePage());
   }
 }

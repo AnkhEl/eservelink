@@ -74,4 +74,48 @@ class WaiterRepositoryImpl implements WaiterRepository {
       return Left(ServerFailure('Unexpected error: $e'));
     }
   }
+
+  // Real-time stream for waiting sessions
+  @override
+  Stream<Either<Failure, List<WaiterSessionEntity>>> watchWaitingSessions({
+    required String restaurantId,
+  }) {
+    try {
+      return remoteDataSource
+          .watchWaitingSessions(restaurantId: restaurantId)
+          .map((sessions) {
+            final entities = sessions.map((m) => m.toEntity()).toList();
+            return Right<Failure, List<WaiterSessionEntity>>(entities);
+          })
+          .handleError((error) {
+            return Left<Failure, List<WaiterSessionEntity>>(
+              ServerFailure('Stream error: $error'),
+            );
+          });
+    } catch (e) {
+      return Stream.value(Left(ServerFailure('Failed to watch sessions: $e')));
+    }
+  }
+
+  // NEW: Real-time stream for waiter's active sessions
+  @override
+  Stream<Either<Failure, List<WaiterSessionEntity>>> watchWaiterActiveSessions({
+    required String waiterId,
+  }) {
+    try {
+      return remoteDataSource
+          .watchWaiterActiveSessions(waiterId: waiterId)
+          .map((sessions) {
+            final entities = sessions.map((m) => m.toEntity()).toList();
+            return Right<Failure, List<WaiterSessionEntity>>(entities);
+          })
+          .handleError((error) {
+            return Left<Failure, List<WaiterSessionEntity>>(
+              ServerFailure('Stream error: $error'),
+            );
+          });
+    } catch (e) {
+      return Stream.value(Left(ServerFailure('Failed to watch sessions: $e')));
+    }
+  }
 }

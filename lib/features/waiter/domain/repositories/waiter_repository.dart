@@ -1,5 +1,3 @@
-// lib/features/waiter/domain/repositories/waiter_repository.dart
-
 import 'package:dartz/dartz.dart';
 import 'package:eservelink/core/error/failures.dart';
 import 'package:eservelink/features/waiter/domain/entities/waiter_session_entity.dart';
@@ -23,7 +21,14 @@ abstract class WaiterRepository {
   });
 
   /// End/complete a session
-  Future<Either<Failure, void>> endSession({
-    required String sessionId,
+  Future<Either<Failure, void>> endSession({required String sessionId});
+
+  // Real-time streams
+  Stream<Either<Failure, List<WaiterSessionEntity>>> watchWaitingSessions({
+    required String restaurantId,
+  });
+
+  Stream<Either<Failure, List<WaiterSessionEntity>>> watchWaiterActiveSessions({
+    required String waiterId,
   });
 }

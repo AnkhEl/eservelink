@@ -218,19 +218,22 @@ Future<void> init() async {
     () => GetUserSessionsUseCase(repository: sl<SessionRepository>()),
   );
 
-  sl.registerLazySingleton(() => GetWaitingSessionsUseCase(sl()));
-  sl.registerLazySingleton(() => GetWaiterActiveSessionsUseCase(sl()));
-  sl.registerLazySingleton(() => JoinSessionUseCase(sl()));
-  sl.registerLazySingleton(() => EndSessionUseCase(sl()));
+  sl.registerLazySingleton(
+    () => GetWaitingSessionsUseCase(sl<WaiterRepository>()),
+  );
+  sl.registerLazySingleton(
+    () => GetWaiterActiveSessionsUseCase(sl<WaiterRepository>()),
+  );
+  sl.registerLazySingleton(() => JoinSessionUseCase(sl<WaiterRepository>()));
+  sl.registerLazySingleton(() => EndSessionUseCase(sl<WaiterRepository>()));
 
   //Blocs
 
   sl.registerFactory<WaiterBloc>(
     () => WaiterBloc(
-      getWaitingSessions: sl(),
-      getWaiterActiveSessions: sl(),
-      joinSession: sl(),
-      endSession: sl(),
+      joinSession: sl<JoinSessionUseCase>(),
+      endSession: sl<EndSessionUseCase>(),
+      repository: sl<WaiterRepository>(),
     ),
   );
   // TODO: Add other core service registrations (like network checker, local storage, etc.) here as needed

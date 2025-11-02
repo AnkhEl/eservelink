@@ -1,6 +1,9 @@
 import 'package:eservelink/features/waiter/domain/entities/waiter_session_entity.dart';
+import 'package:eservelink/features/waiter/presentation/bloc/waiter_bloc.dart';
+import 'package:eservelink/features/waiter/presentation/bloc/waiter_event.dart';
 import 'package:eservelink/features/waiter/presentation/pages/waiter_session_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class ActiveSessionCard extends StatelessWidget {
@@ -22,12 +25,7 @@ class ActiveSessionCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => WaiterSessionPage(session: session),
-            ),
-          );
+          context.read<WaiterBloc>().add(ShowWaiterSessionEvent(session));
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(

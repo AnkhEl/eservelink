@@ -18,6 +18,15 @@ abstract class WaiterRemoteDataSource {
   });
 
   Future<void> endSession({required String sessionId});
+
+  // Real-time streams
+  Stream<List<WaiterSessionModel>> watchWaitingSessions({
+    required String restaurantId,
+  });
+
+  Stream<List<WaiterSessionModel>> watchWaiterActiveSessions({
+    required String waiterId,
+  });
 }
 
 class WaiterRemoteDataSourceImpl implements WaiterRemoteDataSource {
@@ -30,12 +39,13 @@ class WaiterRemoteDataSourceImpl implements WaiterRemoteDataSource {
     required String restaurantId,
   }) async {
     try {
-      final querySnapshot = await firestore
-          .collection('sessions')
-          .where('restaurantId', isEqualTo: restaurantId)
-          .where('status', isEqualTo: 'waitingForWaiter')
-          .orderBy('startTime', descending: true)
-          .get();
+      final querySnapshot =
+          await firestore
+              .collection('sessions')
+              .where('restaurantId', isEqualTo: restaurantId)
+              .where('status', isEqualTo: 'waitingForWaiter')
+              .orderBy('startTime', descending: true)
+              .get();
 
       return querySnapshot.docs
           .map((doc) => WaiterSessionModel.fromFirestore(doc))
@@ -50,12 +60,13 @@ class WaiterRemoteDataSourceImpl implements WaiterRemoteDataSource {
     required String waiterId,
   }) async {
     try {
-      final querySnapshot = await firestore
-          .collection('sessions')
-          .where('waiterId', isEqualTo: waiterId)
-          .where('status', isEqualTo: 'active')
-          .orderBy('startTime', descending: true)
-          .get();
+      final querySnapshot =
+          await firestore
+              .collection('sessions')
+              .where('waiterId', isEqualTo: waiterId)
+              .where('status', isEqualTo: 'active')
+              .orderBy('startTime', descending: true)
+              .get();
 
       return querySnapshot.docs
           .map((doc) => WaiterSessionModel.fromFirestore(doc))
@@ -73,17 +84,16 @@ class WaiterRemoteDataSourceImpl implements WaiterRemoteDataSource {
   }) async {
     try {
       // 1. Find the session by tableId with status waitingForWaiter
-      final querySnapshot = await firestore
-          .collection('sessions')
-          .where('tableId', isEqualTo: tableId)
-          .where('status', isEqualTo: 'waitingForWaiter')
-          .limit(1)
-          .get();
+      final querySnapshot =
+          await firestore
+              .collection('sessions')
+              .where('tableId', isEqualTo: tableId)
+              .where('status', isEqualTo: 'waitingForWaiter')
+              .limit(1)
+              .get();
 
       if (querySnapshot.docs.isEmpty) {
-        throw ServerFailure(
-          'No waiting session found for this table',
-        );
+        throw ServerFailure('No waiting session found for this table');
       }
 
       final sessionDoc = querySnapshot.docs.first;
@@ -114,6 +124,50 @@ class WaiterRemoteDataSourceImpl implements WaiterRemoteDataSource {
       });
     } catch (e) {
       throw ServerFailure('Failed to end session: $e');
+    }
+  }
+
+  // Real-time stream for waiting sessions
+  @override
+  Stream<List<WaiterSessionModel>> watchWaitingSessions({
+    required String restaurantId,
+  }) {
+    try {
+      return firestore
+          .collection('sessions')
+          .where('restaurantId', isEqualTo: restaurantId)
+          .where('status', isEqualTo: 'waitingForWaiter')
+          .orderBy('startTime', descending: true)
+          .snapshots()
+          .map((snapshot) {
+            return snapshot.docs
+                .map((doc) => WaiterSessionModel.fromFirestore(doc))
+                .toList();
+          });
+    } catch (e) {
+      throw ServerFailure('Failed to watch waiting sessions: $e');
+    }
+  }
+
+  // Real-time stream for waiter's active sessions
+  @override
+  Stream<List<WaiterSessionModel>> watchWaiterActiveSessions({
+    required String waiterId,
+  }) {
+    try {
+      return firestore
+          .collection('sessions')
+          .where('waiterId', isEqualTo: waiterId)
+          .where('status', isEqualTo: 'active')
+          .orderBy('startTime', descending: true)
+          .snapshots()
+          .map((snapshot) {
+            return snapshot.docs
+                .map((doc) => WaiterSessionModel.fromFirestore(doc))
+                .toList();
+          });
+    } catch (e) {
+      throw ServerFailure('Failed to watch active sessions: $e');
     }
   }
 }

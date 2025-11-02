@@ -18,6 +18,11 @@ class WaiterSessionPage extends StatelessWidget {
         title: Text(_extractTableNumber()),
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          onPressed:
+              () => context.read<WaiterBloc>().add(ShowWaiterHomeEvent()),
+          icon: Icon(Icons.arrow_back),
+        ),
       ),
       body: BlocListener<WaiterBloc, WaiterState>(
         listener: (context, state) {

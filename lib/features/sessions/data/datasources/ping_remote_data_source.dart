@@ -1,6 +1,5 @@
-// lib/features/sessions/data/datasources/ping_remote_data_source.dart
-
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eservelink/core/error/failures.dart';
 import 'package:eservelink/features/sessions/data/models/ping_model.dart';
 
 abstract class PingRemoteDataSource {
@@ -13,7 +12,10 @@ abstract class PingRemoteDataSource {
   });
 
   Future<List<PingModel>> getWaiterPendingPings(String waiterId);
-  Future<void> acknowledgePing(String pingId);
+  Future<void> acknowledgePing({
+    required String pingId,
+    required String sessionId,
+  });
   Stream<List<PingModel>> streamWaiterPings(String waiterId);
 }
 
@@ -31,38 +33,32 @@ class PingRemoteDataSourceImpl implements PingRemoteDataSource {
     String? message,
   }) async {
     try {
-      // Get session to get waiter ID
-      final sessionDoc =
-          await firestore.collection('sessions').doc(sessionId).get();
+      // Use batch write to update both collections atomically
+      final batch = firestore.batch();
 
-      if (!sessionDoc.exists) {
-        throw Exception('Session not found');
-      }
-
-      final waiterId = sessionDoc.data()?['waiterId'];
-
-      if (waiterId == null) {
-        throw Exception('No waiter assigned to this session');
-      }
-
-      // Create ping
-      await firestore.collection('pings').add({
+      // 1. Create ping document
+      final pingRef = firestore.collection('pings').doc();
+      batch.set(pingRef, {
         'sessionId': sessionId,
         'customerId': customerId,
         'customerName': customerName,
         'tableNumber': tableNumber,
-        'waiterId': waiterId,
         'message': message,
-        'timestamp': FieldValue.serverTimestamp(),
         'isAcknowledged': false,
+        'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // Update session last ping time
-      await firestore.collection('sessions').doc(sessionId).update({
+      // 2. Update session document with hasPing flag
+      final sessionRef = firestore.collection('sessions').doc(sessionId);
+      batch.update(sessionRef, {
+        'hasPing': true,
         'lastPingTime': FieldValue.serverTimestamp(),
       });
+
+      // Commit both operations
+      await batch.commit();
     } catch (e) {
-      throw Exception('Failed to send ping: $e');
+      throw ServerFailure('Failed to send ping: $e');
     }
   }
 
@@ -86,13 +82,34 @@ class PingRemoteDataSourceImpl implements PingRemoteDataSource {
   }
 
   @override
-  Future<void> acknowledgePing(String pingId) async {
+  Future<void> acknowledgePing({
+    required String sessionId,
+    required String pingId,
+  }) async {
     try {
-      await firestore.collection('pings').doc(pingId).update({
-        'isAcknowledged': true,
-      });
+      final batch = firestore.batch();
+
+      // 1. Mark ping as acknowledged
+      final pingRef = firestore.collection('pings').doc(pingId);
+      batch.update(pingRef, {'isAcknowledged': true});
+
+      // 2. Check if there are other unacknowledged pings for this session
+      final unacknowledgedPings =
+          await firestore
+              .collection('pings')
+              .where('sessionId', isEqualTo: sessionId)
+              .where('isAcknowledged', isEqualTo: false)
+              .get();
+
+      // If this was the last unacknowledged ping, clear the hasPing flag
+      if (unacknowledgedPings.docs.length <= 1) {
+        final sessionRef = firestore.collection('sessions').doc(sessionId);
+        batch.update(sessionRef, {'hasPing': false});
+      }
+
+      await batch.commit();
     } catch (e) {
-      throw Exception('Failed to acknowledge ping: $e');
+      throw ServerFailure('Failed to acknowledge ping: $e');
     }
   }
 

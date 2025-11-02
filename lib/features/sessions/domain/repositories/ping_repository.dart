@@ -18,7 +18,10 @@ abstract class PingRepository {
   );
 
   /// Acknowledge a ping
-  Future<Either<Failure, void>> acknowledgePing(String pingId);
+  Future<Either<Failure, void>> acknowledgePing({
+    required String pingId,
+    required String sessionId,
+  });
 
   /// Stream pings for a waiter (real-time)
   Stream<Either<Failure, List<PingEntity>>> streamWaiterPings(String waiterId);

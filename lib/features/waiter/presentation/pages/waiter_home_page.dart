@@ -4,6 +4,7 @@ import 'package:eservelink/features/qr_scanner/presentation/pages/qr_scanner_pag
 import 'package:eservelink/features/waiter/presentation/bloc/waiter_bloc.dart';
 import 'package:eservelink/features/waiter/presentation/bloc/waiter_event.dart';
 import 'package:eservelink/features/waiter/presentation/bloc/waiter_state.dart';
+import 'package:eservelink/features/waiter/presentation/pages/waiter_session_page.dart';
 import 'package:eservelink/features/waiter/presentation/widgets/waiting_session_card.dart';
 import 'package:eservelink/features/waiter/presentation/widgets/active_session_card.dart';
 import 'package:flutter/material.dart';
@@ -17,24 +18,35 @@ class WaiterHomePage extends StatefulWidget {
 }
 
 class _WaiterHomePageState extends State<WaiterHomePage> {
+  // Cache the last known sessions for intermediate states
+  List<dynamic> _cachedWaitingSessions = [];
+  List<dynamic> _cachedActiveSessions = [];
+
   @override
   void initState() {
     super.initState();
-    _loadSessions();
+    _startWatchingSessions();
   }
 
-  void _loadSessions() {
+  @override
+  void dispose() {
+    // Stop watching when page is disposed
+    context.read<WaiterBloc>().add(StopWatchingSessionsEvent());
+    super.dispose();
+  }
+
+  void _startWatchingSessions() {
     final authState = context.read<AuthBloc>().state;
     if (authState is AuthSuccess) {
       final user = authState.user;
 
-      // Load waiting sessions for the restaurant
+      // Start watching sessions in real-time
       context.read<WaiterBloc>().add(
-        LoadWaitingSessionsEvent(user.restaurantId ?? ''),
+        StartWatchingSessionsEvent(
+          restaurantId: user.restaurantId ?? '',
+          waiterId: user.uid,
+        ),
       );
-
-      // Load waiter's active sessions
-      context.read<WaiterBloc>().add(LoadWaiterActiveSessionsEvent(user.uid));
     }
   }
 
@@ -68,17 +80,15 @@ class _WaiterHomePageState extends State<WaiterHomePage> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.live_tv),
+            tooltip: 'Live updates active',
             onPressed: () {
-              final authState = context.read<AuthBloc>().state;
-              if (authState is AuthSuccess) {
-                context.read<WaiterBloc>().add(
-                  RefreshSessionsEvent(
-                    waiterId: authState.user.uid,
-                    restaurantId: authState.user.restaurantId ?? '',
-                  ),
-                );
-              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('🔴 Live: Sessions update automatically'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
             },
           ),
         ],
@@ -93,13 +103,19 @@ class _WaiterHomePageState extends State<WaiterHomePage> {
               ),
             );
           } else if (state is SessionJoined) {
+            // Show success message
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Successfully joined session!'),
                 backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
               ),
             );
-            _loadSessions(); // Refresh after joining
+
+            // Navigate to the session detail page
+            context.read<WaiterBloc>().add(
+              ShowWaiterSessionEvent(state.session),
+            );
           } else if (state is SessionEnded) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -107,139 +123,170 @@ class _WaiterHomePageState extends State<WaiterHomePage> {
                 backgroundColor: Colors.green,
               ),
             );
-            _loadSessions(); // Refresh after ending
+          } else if (state is WaiterSessionsLoaded) {
+            // Cache sessions whenever we get a loaded state
+            _cachedWaitingSessions = state.waitingSessions;
+            _cachedActiveSessions = state.activeSessions;
           }
         },
         builder: (context, state) {
+          // Handle all states that should show the dashboard
+          List<dynamic> waitingSessions = [];
+          List<dynamic> activeSessions = [];
+          bool isLoading = false;
+
           if (state is WaiterLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: Colors.deepPurple),
-            );
+            // Show loading with cached sessions
+            waitingSessions = _cachedWaitingSessions;
+            activeSessions = _cachedActiveSessions;
+            isLoading = true;
+          } else if (state is WaiterSessionsLoaded) {
+            waitingSessions = state.waitingSessions;
+            activeSessions = state.activeSessions;
+          } else if (state is SessionJoined || state is SessionEnded) {
+            // Show cached sessions during intermediate states
+            waitingSessions = _cachedWaitingSessions;
+            activeSessions = _cachedActiveSessions;
+          } else if (state is WaiterError) {
+            // Show cached sessions even on error
+            waitingSessions = _cachedWaitingSessions;
+            activeSessions = _cachedActiveSessions;
           }
 
-          if (state is WaiterSessionsLoaded) {
-            return RefreshIndicator(
-              onRefresh: () async {
-                final authState = context.read<AuthBloc>().state;
-                if (authState is AuthSuccess) {
-                  context.read<WaiterBloc>().add(
-                    RefreshSessionsEvent(
-                      waiterId: authState.user.uid,
-                      restaurantId: authState.user.restaurantId ?? '',
+          // Build the dashboard UI
+          return Stack(
+            children: [
+              RefreshIndicator(
+                onRefresh: () async {
+                  // Streams handle updates automatically
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Sessions update automatically'),
+                      duration: Duration(seconds: 1),
                     ),
                   );
-                }
-              },
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Stats Cards
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildStatCard(
-                            icon: Icons.hourglass_empty,
-                            label: 'Waiting',
-                            value: state.waitingSessions.length.toString(),
-                            color: Colors.orange,
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Stats Cards
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              icon: Icons.hourglass_empty,
+                              label: 'Waiting',
+                              value: waitingSessions.length.toString(),
+                              color: Colors.orange,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              icon: Icons.restaurant,
+                              label: 'Active',
+                              value: activeSessions.length.toString(),
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildStatCard(
+                              icon: Icons.notifications_active,
+                              label: 'Pings',
+                              value:
+                                  _calculateTotalPings(
+                                    activeSessions,
+                                  ).toString(),
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Waiting Sessions
+                      if (waitingSessions.isNotEmpty) ...[
+                        const Text(
+                          'Waiting for Waiter',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatCard(
-                            icon: Icons.restaurant,
-                            label: 'Active',
-                            value: state.activeSessions.length.toString(),
-                            color: Colors.blue,
+                        const SizedBox(height: 12),
+                        ...waitingSessions.map(
+                          (session) => WaitingSessionCard(session: session),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+
+                      // Active Sessions
+                      if (activeSessions.isNotEmpty) ...[
+                        const Text(
+                          'Your Active Sessions',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatCard(
-                            icon: Icons.notifications_active,
-                            label: 'Pings',
-                            value: state.totalPings.toString(),
-                            color: Colors.red,
+                        const SizedBox(height: 12),
+                        ...activeSessions.map(
+                          (session) => ActiveSessionCard(session: session),
+                        ),
+                      ],
+
+                      // Empty State
+                      if (waitingSessions.isEmpty &&
+                          activeSessions.isEmpty) ...[
+                        const SizedBox(height: 100),
+                        Center(
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.inbox,
+                                size: 80,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No sessions available',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Scan a QR code to join a session',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Waiting Sessions
-                    if (state.waitingSessions.isNotEmpty) ...[
-                      const Text(
-                        'Waiting for Waiter',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      ...state.waitingSessions.map(
-                        (session) => WaitingSessionCard(session: session),
-                      ),
-                      const SizedBox(height: 24),
                     ],
-
-                    // Active Sessions
-                    if (state.activeSessions.isNotEmpty) ...[
-                      const Text(
-                        'Your Active Sessions',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      ...state.activeSessions.map(
-                        (session) => ActiveSessionCard(session: session),
-                      ),
-                    ],
-
-                    // Empty State
-                    if (state.waitingSessions.isEmpty &&
-                        state.activeSessions.isEmpty) ...[
-                      const SizedBox(height: 100),
-                      Center(
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.inbox,
-                              size: 80,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No sessions available',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Scan a QR code to join a session',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
               ),
-            );
-          }
 
-          return const Center(child: Text('Something went wrong'));
+              // Loading overlay (only when truly loading, not during state transitions)
+              if (isLoading)
+                Container(
+                  color: Colors.black.withOpacity(0.1),
+                  child: const Center(
+                    child: CircularProgressIndicator(color: Colors.deepPurple),
+                  ),
+                ),
+            ],
+          );
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -283,5 +330,9 @@ class _WaiterHomePageState extends State<WaiterHomePage> {
         ),
       ),
     );
+  }
+
+  int _calculateTotalPings(List<dynamic> sessions) {
+    return sessions.where((session) => session.hasPing == true).length;
   }
 }

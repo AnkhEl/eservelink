@@ -68,3 +68,13 @@ class WaiterError extends WaiterState {
   @override
   List<Object?> get props => [message];
 }
+
+/// Route to WaiterSessionPage state
+class ShowWaiterSessionPage extends WaiterState {
+  final WaiterSessionEntity session;
+
+  const ShowWaiterSessionPage(this.session);
+}
+
+/// Route to WaiterHomePage state
+class ShowWaiterHomePage extends WaiterState {}

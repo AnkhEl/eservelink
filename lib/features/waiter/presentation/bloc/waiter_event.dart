@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:eservelink/features/waiter/domain/entities/waiter_session_entity.dart';
 
 abstract class WaiterEvent extends Equatable {
   const WaiterEvent();
@@ -7,24 +8,35 @@ abstract class WaiterEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Load waiting sessions for a restaurant
-class LoadWaitingSessionsEvent extends WaiterEvent {
+/// Start watching sessions in real-time
+class StartWatchingSessionsEvent extends WaiterEvent {
   final String restaurantId;
-
-  const LoadWaitingSessionsEvent(this.restaurantId);
-
-  @override
-  List<Object?> get props => [restaurantId];
-}
-
-/// Load active sessions for a waiter
-class LoadWaiterActiveSessionsEvent extends WaiterEvent {
   final String waiterId;
 
-  const LoadWaiterActiveSessionsEvent(this.waiterId);
+  const StartWatchingSessionsEvent({
+    required this.restaurantId,
+    required this.waiterId,
+  });
 
   @override
-  List<Object?> get props => [waiterId];
+  List<Object?> get props => [restaurantId, waiterId];
+}
+
+/// Stop watching sessions
+class StopWatchingSessionsEvent extends WaiterEvent {}
+
+/// Internal event when sessions are updated from stream
+class SessionsUpdatedEvent extends WaiterEvent {
+  final List<WaiterSessionEntity> waitingSessions;
+  final List<WaiterSessionEntity> activeSessions;
+
+  const SessionsUpdatedEvent({
+    required this.waitingSessions,
+    required this.activeSessions,
+  });
+
+  @override
+  List<Object?> get props => [waitingSessions, activeSessions];
 }
 
 /// Join a session by scanning table QR
@@ -53,16 +65,12 @@ class EndSessionEvent extends WaiterEvent {
   List<Object?> get props => [sessionId];
 }
 
-/// Refresh all sessions
-class RefreshSessionsEvent extends WaiterEvent {
-  final String waiterId;
-  final String restaurantId;
+/// Show WaiterSessionPage
+class ShowWaiterSessionEvent extends WaiterEvent {
+  final WaiterSessionEntity session;
 
-  const RefreshSessionsEvent({
-    required this.waiterId,
-    required this.restaurantId,
-  });
-
-  @override
-  List<Object?> get props => [waiterId, restaurantId];
+  const ShowWaiterSessionEvent(this.session);
 }
+
+/// Show WaiterHomePage
+class ShowWaiterHomeEvent extends WaiterEvent {}

@@ -46,9 +46,15 @@ class PingRepositoryImpl implements PingRepository {
   }
 
   @override
-  Future<Either<Failure, void>> acknowledgePing(String pingId) async {
+  Future<Either<Failure, void>> acknowledgePing({
+    required String pingId,
+    required String sessionId,
+  }) async {
     try {
-      await remoteDataSource.acknowledgePing(pingId);
+      await remoteDataSource.acknowledgePing(
+        pingId: pingId,
+        sessionId: sessionId,
+      );
       return const Right(null);
     } catch (e) {
       return Left(PingFailure(e.toString()));
