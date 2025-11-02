@@ -4,6 +4,14 @@ import 'package:eservelink/features/auth/domain/repositories/user_repository.dar
 import 'package:eservelink/features/auth/domain/usecases/check_email_verification.dart';
 import 'package:eservelink/features/auth/domain/usecases/reset_password.dart';
 import 'package:eservelink/features/auth/domain/usecases/send_email_verification.dart';
+import 'package:eservelink/features/chat/data/datasources/chat_remote_data_source.dart';
+import 'package:eservelink/features/chat/data/repositories/chat_repository_impl.dart';
+import 'package:eservelink/features/chat/domain/repositories/chat_repository.dart';
+import 'package:eservelink/features/chat/domain/usecases/mark_messages_read_usecase.dart';
+import 'package:eservelink/features/chat/domain/usecases/send_message_usecase.dart';
+import 'package:eservelink/features/chat/domain/usecases/send_typing_indicator_usecase.dart';
+import 'package:eservelink/features/chat/domain/usecases/stream_messages_usecase.dart';
+import 'package:eservelink/features/chat/presentation/bloc/chat_bloc.dart';
 import 'package:eservelink/features/home/data/datasources/restaurant_remote_data_source.dart';
 import 'package:eservelink/features/home/data/datasources/review_remote_data_source.dart';
 import 'package:eservelink/features/home/data/repositories/restaurant_repository_impl.dart';
@@ -19,15 +27,12 @@ import 'package:eservelink/features/home/domain/usecases/get_restaurant_reviews_
 import 'package:eservelink/features/qr_scanner/data/repositories/qr_scanner_repository_impl.dart';
 import 'package:eservelink/features/qr_scanner/domain/repositories/qr_scanner_repository.dart';
 import 'package:eservelink/features/qr_scanner/domain/usecases/scan_qr_code.dart';
-import 'package:eservelink/features/sessions/data/datasources/chat_remote_data_source.dart';
 import 'package:eservelink/features/sessions/data/datasources/ping_remote_data_source.dart';
 import 'package:eservelink/features/sessions/data/datasources/session_remote_data_source.dart';
 import 'package:eservelink/features/sessions/data/datasources/table_remote_data_source.dart';
-import 'package:eservelink/features/sessions/data/repositories/chat_repository_impl.dart';
 import 'package:eservelink/features/sessions/data/repositories/ping_repository_impl.dart';
 import 'package:eservelink/features/sessions/data/repositories/session_repository_impl.dart';
 import 'package:eservelink/features/sessions/data/repositories/table_repository_impl.dart';
-import 'package:eservelink/features/sessions/domain/repositories/chat_repository.dart';
 import 'package:eservelink/features/sessions/domain/repositories/ping_repository.dart';
 import 'package:eservelink/features/sessions/domain/repositories/session_repository.dart';
 import 'package:eservelink/features/sessions/domain/repositories/table_repository.dart';
@@ -35,7 +40,6 @@ import 'package:eservelink/features/sessions/domain/usecases/get_active_session_
 import 'package:eservelink/features/sessions/domain/usecases/get_user_sessions_usecase.dart';
 import 'package:eservelink/features/sessions/domain/usecases/join_session_as_waiter_usecase.dart';
 import 'package:eservelink/features/sessions/domain/usecases/scan_qr_and_create_session_usecase.dart';
-import 'package:eservelink/features/sessions/domain/usecases/send_chat_message_usecase.dart';
 import 'package:eservelink/features/sessions/domain/usecases/send_ping_usecase.dart';
 import 'package:eservelink/features/waiter/data/datasources/waiter_remote_data_source.dart';
 import 'package:eservelink/features/waiter/data/repositories/waiter_repository_impl.dart';
@@ -85,16 +89,17 @@ Future<void> init() async {
     () => SessionRemoteDataSourceImpl(firestore: sl()),
   );
 
-  sl.registerLazySingleton<ChatRemoteDataSource>(
-    () => ChatRemoteDataSourceImpl(firestore: sl()),
-  );
-
   sl.registerLazySingleton<PingRemoteDataSource>(
     () => PingRemoteDataSourceImpl(firestore: sl<FirebaseFirestore>()),
   );
 
   sl.registerLazySingleton<WaiterRemoteDataSource>(
     () => WaiterRemoteDataSourceImpl(firestore: sl<FirebaseFirestore>()),
+  );
+
+  // Data sources
+  sl.registerLazySingleton<ChatRemoteDataSource>(
+    () => ChatRemoteDataSourceImpl(firestore: sl()),
   );
 
   // Repositories
@@ -132,16 +137,16 @@ Future<void> init() async {
     () => SessionRepositoryImpl(remoteDataSource: sl()),
   );
 
-  sl.registerLazySingleton<ChatRepository>(
-    () => ChatRepositoryImpl(remoteDataSource: sl()),
-  );
-
   sl.registerLazySingleton<PingRepository>(
     () => PingRepositoryImpl(remoteDataSource: sl<PingRemoteDataSource>()),
   );
 
   sl.registerLazySingleton<WaiterRepository>(
     () => WaiterRepositoryImpl(remoteDataSource: sl<WaiterRemoteDataSource>()),
+  );
+
+  sl.registerLazySingleton<ChatRepository>(
+    () => ChatRepositoryImpl(remoteDataSource: sl()),
   );
 
   // Use Cases
@@ -204,10 +209,6 @@ Future<void> init() async {
     () => GetActiveSessionUseCase(repository: sl()),
   );
 
-  sl.registerLazySingleton<SendChatMessageUseCase>(
-    () => SendChatMessageUseCase(repository: sl()),
-  );
-
   sl.registerLazySingleton<SendPingUseCase>(
     () => SendPingUseCase(
       pingRepository: sl<PingRepository>(),
@@ -227,6 +228,13 @@ Future<void> init() async {
   sl.registerLazySingleton(() => JoinSessionUseCase(sl<WaiterRepository>()));
   sl.registerLazySingleton(() => EndSessionUseCase(sl<WaiterRepository>()));
 
+  sl.registerLazySingleton(() => SendMessageUseCase(sl<ChatRepository>()));
+  sl.registerLazySingleton(() => StreamMessagesUseCase(sl<ChatRepository>()));
+  sl.registerLazySingleton(() => MarkMessagesReadUseCase(sl<ChatRepository>()));
+  sl.registerLazySingleton(
+    () => SendTypingIndicatorUseCase(sl<ChatRepository>()),
+  );
+
   //Blocs
 
   sl.registerFactory<WaiterBloc>(
@@ -234,6 +242,16 @@ Future<void> init() async {
       joinSession: sl<JoinSessionUseCase>(),
       endSession: sl<EndSessionUseCase>(),
       repository: sl<WaiterRepository>(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => ChatBloc(
+      streamMessages: sl<StreamMessagesUseCase>(),
+      sendMessage: sl<SendMessageUseCase>(),
+      markMessagesRead: sl<MarkMessagesReadUseCase>(),
+      sendTypingIndicator: sl<SendTypingIndicatorUseCase>(),
+      repository: sl<ChatRepository>(),
     ),
   );
   // TODO: Add other core service registrations (like network checker, local storage, etc.) here as needed

@@ -1,5 +1,8 @@
+// lib/features/sessions/presentation/pages/session_active_page.dart
+
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eservelink/features/chat/presentation/pages/chat_page.dart';
 import 'package:eservelink/features/sessions/domain/entities/session_entity.dart';
 import 'package:eservelink/features/sessions/presentation/bloc/session_bloc.dart';
 import 'package:eservelink/features/sessions/presentation/bloc/session_event.dart';
@@ -108,6 +111,39 @@ class _SessionActivePageState extends State<SessionActivePage> {
               ),
               const SizedBox(height: 40),
 
+              // Chat button
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => ChatPage(
+                            sessionId: widget.session.id,
+                            otherUserName:
+                                widget.session.waiterName ?? "Waiter",
+                            tableNumber: _extractTableNumber(
+                              widget.session.tableId,
+                            ),
+                          ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.chat),
+                label: const Text('Chat with Waiter'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 16,
+                  ),
+                  textStyle: const TextStyle(fontSize: 18),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
               // Ping button
               ElevatedButton.icon(
                 onPressed: () {
@@ -137,7 +173,7 @@ class _SessionActivePageState extends State<SessionActivePage> {
 
               // More features coming
               Text(
-                'Chat and Bill features coming soon!',
+                'Bill features coming soon!',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey[600],

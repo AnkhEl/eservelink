@@ -1,3 +1,4 @@
+import 'package:eservelink/features/chat/presentation/pages/chat_page.dart';
 import 'package:eservelink/features/waiter/domain/entities/waiter_session_entity.dart';
 import 'package:eservelink/features/waiter/presentation/bloc/waiter_bloc.dart';
 import 'package:eservelink/features/waiter/presentation/bloc/waiter_event.dart';
@@ -21,13 +22,15 @@ class WaiterSessionPage extends StatelessWidget {
         leading: IconButton(
           onPressed:
               () => context.read<WaiterBloc>().add(ShowWaiterHomeEvent()),
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
         ),
       ),
       body: BlocListener<WaiterBloc, WaiterState>(
         listener: (context, state) {
           if (state is SessionEnded) {
-            Navigator.pop(context);
+            // Navigate back to home
+            context.read<WaiterBloc>().add(ShowWaiterHomeEvent());
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -86,7 +89,14 @@ class WaiterSessionPage extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
+
+              // Quick Actions Title
+              const Text(
+                'Quick Actions',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
 
               // Quick Actions
               Card(
@@ -119,9 +129,15 @@ class WaiterSessionPage extends StatelessWidget {
                               )
                               : const Icon(Icons.chevron_right),
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Chat feature coming soon!'),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => ChatPage(
+                                  sessionId: session.id,
+                                  otherUserName: session.customerName,
+                                  tableNumber: _extractTableNumber(),
+                                ),
                           ),
                         );
                       },
@@ -145,6 +161,20 @@ class WaiterSessionPage extends StatelessWidget {
                     ),
                     const Divider(height: 1),
                     ListTile(
+                      leading: const Icon(Icons.add_circle, color: Colors.teal),
+                      title: const Text('Add Item'),
+                      subtitle: const Text('Add order manually'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Manual order entry coming soon!'),
+                          ),
+                        );
+                      },
+                    ),
+                    const Divider(height: 1),
+                    ListTile(
                       leading: const Icon(Icons.payment, color: Colors.purple),
                       title: const Text('Request Payment'),
                       subtitle: const Text('Ask customer to pay'),
@@ -162,6 +192,47 @@ class WaiterSessionPage extends StatelessWidget {
               ),
 
               const SizedBox(height: 24),
+
+              // Ping Indicator (if customer pinged)
+              if (session.hasPing)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.red.withOpacity(0.5)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.notifications_active, color: Colors.red),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Customer needs attention!',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'The customer has pinged you',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.red[900],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
               // End Session Button
               SizedBox(
@@ -200,7 +271,7 @@ class WaiterSessionPage extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Complete the session when the customer is ready to leave.',
+                        'Complete the session when the customer is ready to leave and has paid.',
                         style: TextStyle(color: Colors.blue[900], fontSize: 14),
                       ),
                     ),

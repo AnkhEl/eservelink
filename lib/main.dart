@@ -10,6 +10,7 @@ import 'package:eservelink/features/auth/domain/usecases/sign_out.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_event.dart';
 import 'package:eservelink/features/auth/presentation/components/auth_wrapper.dart';
+import 'package:eservelink/features/chat/presentation/bloc/chat_bloc.dart';
 import 'package:eservelink/features/history/presentation/bloc/history_bloc.dart';
 import 'package:eservelink/features/home/domain/usecases/add_restaurant_usecase.dart';
 import 'package:eservelink/features/home/domain/usecases/get_nearby_restaurants_usecase.dart';
@@ -90,6 +91,7 @@ class MyApp extends StatelessWidget {
                   HistoryBloc(getUserSessions: di.sl<GetUserSessionsUseCase>()),
         ),
         BlocProvider<WaiterBloc>(create: (_) => di.sl<WaiterBloc>()),
+        BlocProvider<ChatBloc>(create: (_) => di.sl<ChatBloc>()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

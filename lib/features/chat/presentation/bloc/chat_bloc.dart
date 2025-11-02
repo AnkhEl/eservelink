@@ -1,3 +1,5 @@
+// lib/features/chat/presentation/bloc/chat_bloc.dart
+
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eservelink/features/chat/domain/entities/message_entity.dart';
@@ -45,7 +47,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     StartListeningToMessagesEvent event,
     Emitter<ChatState> emit,
   ) async {
-    print('💬 Starting to listen to messages for session: ${event.sessionId}');
     _currentUserId = event.currentUserId;
 
     // Cancel existing subscriptions
@@ -57,18 +58,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       (result) {
         result.fold(
           (failure) {
-            print('❌ Error streaming messages: ${failure.message}');
             add(MessagesUpdatedEvent([]));
           },
           (messages) {
-            print('✅ Messages updated: ${messages.length}');
             _currentMessages = messages;
             add(MessagesUpdatedEvent(messages));
           },
         );
       },
       onError: (error) {
-        print('❌ Stream error (messages): $error');
+        ///TODO implement proper error handling
       },
     );
 
@@ -79,9 +78,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           (result) {
             result.fold(
               (failure) {
-                print(
-                  '❌ Error streaming typing indicators: ${failure.message}',
-                );
+                ///TODO implement proper error handling
               },
               (indicators) {
                 _currentTypingIndicators = indicators;
@@ -90,7 +87,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             );
           },
           onError: (error) {
-            print('❌ Stream error (typing): $error');
+            ///TODO implement proper error handling
           },
         );
   }
@@ -99,7 +96,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     StopListeningToMessagesEvent event,
     Emitter<ChatState> emit,
   ) {
-    print('⏹️ Stopping message listeners...');
     _messagesSubscription?.cancel();
     _typingIndicatorsSubscription?.cancel();
     _messagesSubscription = null;
@@ -133,8 +129,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     SendMessageEvent event,
     Emitter<ChatState> emit,
   ) async {
-    print('📤 Sending message...');
-
     final result = await sendMessage(
       SendMessageParams(
         sessionId: event.sessionId,
@@ -147,7 +141,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     result.fold(
       (failure) {
-        print('❌ Failed to send message: ${failure.message}');
         emit(ChatError(failure.message));
         // Return to loaded state
         emit(
@@ -159,9 +152,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         );
       },
       (message) {
-        print('✅ Message sent successfully');
-        emit(ChatMessageSent(message));
-        // Stream will automatically update with new message
+        // Don't emit any state - the stream will automatically update
+        // This prevents the "Something went wrong" screen
       },
     );
   }
@@ -170,8 +162,6 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     MarkMessagesAsReadEvent event,
     Emitter<ChatState> emit,
   ) async {
-    print('📖 Marking messages as read...');
-
     await markMessagesRead(
       MarkMessagesReadParams(sessionId: event.sessionId, userId: event.userId),
     );
