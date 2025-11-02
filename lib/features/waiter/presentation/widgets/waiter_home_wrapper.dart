@@ -1,5 +1,3 @@
-// lib/features/waiter/presentation/widgets/waiter_home_wrapper.dart
-
 import 'package:eservelink/features/waiter/presentation/bloc/waiter_bloc.dart';
 import 'package:eservelink/features/waiter/presentation/bloc/waiter_state.dart';
 import 'package:eservelink/features/waiter/presentation/pages/waiter_home_page.dart';
