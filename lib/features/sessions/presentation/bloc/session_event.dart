@@ -82,14 +82,16 @@ class CancelSessionEvent extends SessionEvent {
 }
 
 //Navigation events
-class ShowSessionWaitingEvent extends SessionEvent{
+class ShowSessionWaitingEvent extends SessionEvent {
   final SessionEntity session;
 
   const ShowSessionWaitingEvent(this.session);
 }
-class ShowSessionActiveEvent extends SessionEvent{
+
+class ShowSessionActiveEvent extends SessionEvent {
   final SessionEntity session;
 
   const ShowSessionActiveEvent(this.session);
 }
-class ShowSessionHomeEvent extends SessionEvent{}
+
+class ShowSessionHomeEvent extends SessionEvent {}

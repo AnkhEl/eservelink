@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eservelink/features/chat/presentation/pages/chat_page.dart';
 import 'package:eservelink/features/waiter/domain/entities/waiter_session_entity.dart';
 import 'package:eservelink/features/waiter/presentation/bloc/waiter_bloc.dart';
@@ -28,7 +29,6 @@ class WaiterSessionPage extends StatelessWidget {
       body: BlocListener<WaiterBloc, WaiterState>(
         listener: (context, state) {
           if (state is SessionEnded) {
-            // Navigate back to home
             context.read<WaiterBloc>().add(ShowWaiterHomeEvent());
 
             ScaffoldMessenger.of(context).showSnackBar(
@@ -88,6 +88,11 @@ class WaiterSessionPage extends StatelessWidget {
                   ),
                 ),
               ),
+
+              const SizedBox(height: 16),
+
+              // Ping Indicator with Acknowledge Button (if customer pinged)
+              if (session.hasPing) _buildPingBanner(context),
 
               const SizedBox(height: 24),
 
@@ -193,47 +198,6 @@ class WaiterSessionPage extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // Ping Indicator (if customer pinged)
-              if (session.hasPing)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.red.withOpacity(0.5)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.notifications_active, color: Colors.red),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Customer needs attention!',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'The customer has pinged you',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.red[900],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
               // End Session Button
               SizedBox(
                 width: double.infinity,
@@ -282,6 +246,103 @@ class WaiterSessionPage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPingBanner(BuildContext context) {
+    return FutureBuilder<QuerySnapshot>(
+      future:
+          FirebaseFirestore.instance
+              .collection('pings')
+              .where('sessionId', isEqualTo: session.id)
+              .where('isAcknowledged', isEqualTo: false)
+              .limit(1)
+              .get(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final pingDoc = snapshot.data!.docs.first;
+        final pingId = pingDoc.id;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.red.withOpacity(0.5), width: 2),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.notifications_active,
+                    color: Colors.red,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Customer needs attention!',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${session.customerName} has pinged you',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.red[900],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    context.read<WaiterBloc>().add(
+                      AcknowledgePingEvent(
+                        pingId: pingId,
+                        sessionId: session.id,
+                      ),
+                    );
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Ping acknowledged! Customer notified.'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.check_circle),
+                  label: const Text('Acknowledge Ping'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

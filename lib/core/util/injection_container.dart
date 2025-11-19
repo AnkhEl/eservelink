@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eservelink/core/services/notification_service.dart';
 import 'package:eservelink/features/auth/data/repositories/user_repository_impl.dart';
 import 'package:eservelink/features/auth/domain/repositories/user_repository.dart';
 import 'package:eservelink/features/auth/domain/usecases/check_email_verification.dart';
@@ -24,6 +25,17 @@ import 'package:eservelink/features/home/domain/usecases/get_nearby_restaurants_
 import 'package:eservelink/features/home/domain/usecases/get_rating_breakdown_usecase.dart';
 import 'package:eservelink/features/home/domain/usecases/get_restaurant_by_id_usecase.dart';
 import 'package:eservelink/features/home/domain/usecases/get_restaurant_reviews_usecase.dart';
+import 'package:eservelink/features/notifications/data/datasources/notification_remote_data_source.dart';
+import 'package:eservelink/features/notifications/data/repositories/notification_repository_impl.dart';
+import 'package:eservelink/features/notifications/domain/repositories/notification_repository.dart';
+import 'package:eservelink/features/notifications/domain/usecases/create_notification_usecase.dart';
+import 'package:eservelink/features/notifications/domain/usecases/delete_notification_usecase.dart';
+import 'package:eservelink/features/notifications/domain/usecases/get_unread_count_usecase.dart';
+import 'package:eservelink/features/notifications/domain/usecases/mark_all_read_usecase.dart';
+import 'package:eservelink/features/notifications/domain/usecases/mark_notification_read_usecase.dart';
+import 'package:eservelink/features/notifications/domain/usecases/stream_notifications_usecase.dart';
+import 'package:eservelink/features/notifications/domain/usecases/stream_unread_notifications_usecase.dart';
+import 'package:eservelink/features/notifications/presentation/bloc/notification_bloc.dart';
 import 'package:eservelink/features/qr_scanner/data/repositories/qr_scanner_repository_impl.dart';
 import 'package:eservelink/features/qr_scanner/domain/repositories/qr_scanner_repository.dart';
 import 'package:eservelink/features/qr_scanner/domain/usecases/scan_qr_code.dart';
@@ -36,6 +48,7 @@ import 'package:eservelink/features/sessions/data/repositories/table_repository_
 import 'package:eservelink/features/sessions/domain/repositories/ping_repository.dart';
 import 'package:eservelink/features/sessions/domain/repositories/session_repository.dart';
 import 'package:eservelink/features/sessions/domain/repositories/table_repository.dart';
+import 'package:eservelink/features/sessions/domain/usecases/acknowledge_ping_usecase.dart';
 import 'package:eservelink/features/sessions/domain/usecases/get_active_session_usecase.dart';
 import 'package:eservelink/features/sessions/domain/usecases/get_user_sessions_usecase.dart';
 import 'package:eservelink/features/sessions/domain/usecases/join_session_as_waiter_usecase.dart';
@@ -90,14 +103,20 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<PingRemoteDataSource>(
-    () => PingRemoteDataSourceImpl(firestore: sl<FirebaseFirestore>()),
+    () => PingRemoteDataSourceImpl(
+      firestore: sl<FirebaseFirestore>(),
+      notificationService: sl<NotificationService>(),
+    ),
   );
 
   sl.registerLazySingleton<WaiterRemoteDataSource>(
     () => WaiterRemoteDataSourceImpl(firestore: sl<FirebaseFirestore>()),
   );
 
-  // Data sources
+  sl.registerLazySingleton<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSourceImpl(firestore: sl()),
+  );
+
   sl.registerLazySingleton<ChatRemoteDataSource>(
     () => ChatRemoteDataSourceImpl(firestore: sl()),
   );
@@ -147,6 +166,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<ChatRepository>(
     () => ChatRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(remoteDataSource: sl()),
   );
 
   // Use Cases
@@ -235,6 +258,15 @@ Future<void> init() async {
     () => SendTypingIndicatorUseCase(sl<ChatRepository>()),
   );
 
+  sl.registerLazySingleton(() => CreateNotificationUseCase(sl()));
+  sl.registerLazySingleton(() => StreamNotificationsUseCase(sl()));
+  sl.registerLazySingleton(() => StreamUnreadNotificationsUseCase(sl()));
+  sl.registerLazySingleton(() => MarkNotificationReadUseCase(sl()));
+  sl.registerLazySingleton(() => MarkAllReadUseCase(sl()));
+  sl.registerLazySingleton(() => GetUnreadCountUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteNotificationUseCase(sl()));
+  sl.registerLazySingleton(() => AcknowledgePingUseCase(sl()));
+
   //Blocs
 
   sl.registerFactory<WaiterBloc>(
@@ -242,6 +274,7 @@ Future<void> init() async {
       joinSession: sl<JoinSessionUseCase>(),
       endSession: sl<EndSessionUseCase>(),
       repository: sl<WaiterRepository>(),
+      acknowledgePing: sl<AcknowledgePingUseCase>(),
     ),
   );
 
@@ -254,5 +287,20 @@ Future<void> init() async {
       repository: sl<ChatRepository>(),
     ),
   );
+
+  sl.registerFactory(
+    () => NotificationBloc(
+      streamNotifications: sl(),
+      createNotification: sl(),
+      markNotificationRead: sl(),
+      markAllRead: sl(),
+      deleteNotification: sl(),
+    ),
+  );
   // TODO: Add other core service registrations (like network checker, local storage, etc.) here as needed
+  sl.registerLazySingleton<NotificationService>(
+    () => NotificationService(
+      createNotification: sl<CreateNotificationUseCase>(),
+    ),
+  );
 }

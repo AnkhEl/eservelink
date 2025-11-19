@@ -65,6 +65,17 @@ class EndSessionEvent extends WaiterEvent {
   List<Object?> get props => [sessionId];
 }
 
+/// Acknowledge a ping
+class AcknowledgePingEvent extends WaiterEvent {
+  final String pingId;
+  final String sessionId;
+
+  const AcknowledgePingEvent({required this.pingId, required this.sessionId});
+
+  @override
+  List<Object?> get props => [pingId, sessionId];
+}
+
 /// Show WaiterSessionPage
 class ShowWaiterSessionEvent extends WaiterEvent {
   final WaiterSessionEntity session;
