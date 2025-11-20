@@ -50,6 +50,7 @@ class _HomeState extends State<Home> {
 
     locationResult.fold(
       (failure) {
+        if (!mounted) return;
         setState(() {
           _currentLocation = failure.message;
           _locationLoading = false;
@@ -61,7 +62,7 @@ class _HomeState extends State<Home> {
             position.latitude,
             position.longitude,
           );
-
+          if (!mounted) return;
           if (placemarks.isNotEmpty) {
             final place = placemarks.first;
             setState(() {
@@ -76,30 +77,29 @@ class _HomeState extends State<Home> {
             });
           }
 
-          if (mounted) {
-            context.read<RestaurantBloc>().add(
-              LoadNearbyRestaurantsEvent(
-                latitude: position.latitude,
-                longitude: position.longitude,
-                radiusInKm: _selectedRadius,
-              ),
-            );
-          }
+          if (!mounted) return;
+          context.read<RestaurantBloc>().add(
+            LoadNearbyRestaurantsEvent(
+              latitude: position.latitude,
+              longitude: position.longitude,
+              radiusInKm: _selectedRadius,
+            ),
+          );
         } catch (e) {
+          if (!mounted) return;
           setState(() {
             _currentLocation = 'Could not fetch location name';
             _locationLoading = false;
           });
 
-          if (mounted) {
-            context.read<RestaurantBloc>().add(
-              LoadNearbyRestaurantsEvent(
-                latitude: position.latitude,
-                longitude: position.longitude,
-                radiusInKm: _selectedRadius,
-              ),
-            );
-          }
+          if (!mounted) return;
+          context.read<RestaurantBloc>().add(
+            LoadNearbyRestaurantsEvent(
+              latitude: position.latitude,
+              longitude: position.longitude,
+              radiusInKm: _selectedRadius,
+            ),
+          );
         }
       },
     );
@@ -1039,11 +1039,10 @@ class _HomeState extends State<Home> {
     final locationResult = await _locationService.getCurrentLocation();
     locationResult.fold(
       (failure) {
-        if (mounted) {
-          setState(() {
-            _currentLocation = failure.message;
-          });
-        }
+        if (!mounted) return;
+        setState(() {
+          _currentLocation = failure.message;
+        });
       },
       (position) async {
         try {
@@ -1051,7 +1050,8 @@ class _HomeState extends State<Home> {
             position.latitude,
             position.longitude,
           );
-          if (placemarks.isNotEmpty && mounted) {
+          if (!mounted) return;
+          if (placemarks.isNotEmpty) {
             final place = placemarks.first;
             setState(() {
               _currentLocation =
@@ -1059,11 +1059,10 @@ class _HomeState extends State<Home> {
             });
           }
         } catch (e) {
-          if (mounted) {
-            setState(() {
-              _currentLocation = 'Could not fetch location name';
-            });
-          }
+          if (!mounted) return;
+          setState(() {
+            _currentLocation = 'Could not fetch location name';
+          });
         }
       },
     );

@@ -28,6 +28,10 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
 
+  bool _didInitDependencies = false;
+  ChatBloc? _chatBloc;
+  AuthBloc? _authBloc;
+
   @override
   void initState() {
     super.initState();
@@ -37,14 +41,25 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void dispose() {
     _scrollController.dispose();
-    context.read<ChatBloc>().add(StopListeningToMessagesEvent());
+    _chatBloc?.add(StopListeningToMessagesEvent());
     super.dispose();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didInitDependencies) {
+      _chatBloc = context.read<ChatBloc>();
+      _authBloc = context.read<AuthBloc>();
+      _didInitDependencies = true;
+      _startListening();
+    }
+  }
+
   void _startListening() {
-    final authState = context.read<AuthBloc>().state;
+    final authState = _authBloc?.state;
     if (authState is AuthSuccess) {
-      context.read<ChatBloc>().add(
+      _chatBloc?.add(
         StartListeningToMessagesEvent(
           sessionId: widget.sessionId,
           currentUserId: authState.user.uid,
@@ -52,7 +67,7 @@ class _ChatPageState extends State<ChatPage> {
       );
 
       // Mark messages as read
-      context.read<ChatBloc>().add(
+      _chatBloc?.add(
         MarkMessagesAsReadEvent(
           sessionId: widget.sessionId,
           userId: authState.user.uid,
@@ -74,9 +89,9 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _handleSendMessage(String text) {
-    final authState = context.read<AuthBloc>().state;
+    final authState = _authBloc?.state;
     if (authState is AuthSuccess) {
-      context.read<ChatBloc>().add(
+      _chatBloc?.add(
         SendMessageEvent(
           sessionId: widget.sessionId,
           senderId: authState.user.uid,
@@ -89,9 +104,9 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   void _handleTypingChanged(bool isTyping) {
-    final authState = context.read<AuthBloc>().state;
+    final authState = _authBloc?.state;
     if (authState is AuthSuccess) {
-      context.read<ChatBloc>().add(
+      _chatBloc?.add(
         SendTypingIndicatorEvent(
           sessionId: widget.sessionId,
           userId: authState.user.uid,
@@ -125,9 +140,9 @@ class _ChatPageState extends State<ChatPage> {
                   _scrollToBottom();
 
                   // Mark messages as read when new messages arrive
-                  final authState = context.read<AuthBloc>().state;
+                  final authState = _authBloc?.state;
                   if (authState is AuthSuccess) {
-                    context.read<ChatBloc>().add(
+                    _chatBloc?.add(
                       MarkMessagesAsReadEvent(
                         sessionId: widget.sessionId,
                         userId: authState.user.uid,
