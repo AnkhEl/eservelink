@@ -4,6 +4,8 @@ import 'package:eservelink/features/auth/presentation/pages/email_verification_p
 import 'package:eservelink/features/auth/presentation/pages/password_reset_page.dart';
 import 'package:eservelink/features/auth/presentation/pages/register_page.dart';
 import 'package:eservelink/features/home/presentation/widgets/home_wrapper.dart';
+import 'package:eservelink/features/notifications/presentation/bloc/notification_bloc.dart';
+import 'package:eservelink/features/notifications/presentation/bloc/notification_event.dart';
 import 'package:eservelink/features/sessions/presentation/bloc/session_bloc.dart';
 import 'package:eservelink/features/sessions/presentation/bloc/session_state.dart';
 import 'package:eservelink/features/sessions/presentation/pages/session_active_page.dart';
@@ -25,6 +27,7 @@ class AuthWrapper extends StatefulWidget {
 class _AuthWrapperState extends State<AuthWrapper> {
   bool _isOnRegisterPage = false;
   bool _showSuccessSnackbar = false;
+  bool _notificationsStarted = false;
 
   @override
   void initState() {
@@ -63,7 +66,23 @@ class _AuthWrapperState extends State<AuthWrapper> {
                 message: "You have successfully logged in",
               ),
             );
+            _showSuccessSnackbar = false;
           }
+
+          // Start listening to notifications once per authenticated session
+          if (!_notificationsStarted) {
+            context.read<NotificationBloc>().add(
+              StartListeningToNotificationsEvent(state.user.uid),
+            );
+            _notificationsStarted = true;
+          }
+        }
+
+        // Reset notification flag on logout/failure
+        if (state is AuthShowLogin ||
+            state is AuthShowRegister ||
+            state is AuthFailure) {
+          _notificationsStarted = false;
         }
       },
       builder: (context, state) {
@@ -144,7 +163,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
                 return SessionActivePage(session: sessionState.session);
               }
 
-              if(sessionState is SessionShowHome){
+              if (sessionState is SessionShowHome) {
                 return const HomeWrapper();
               }
 

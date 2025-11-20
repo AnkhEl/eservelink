@@ -1,5 +1,9 @@
 import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_state.dart';
+import 'package:eservelink/features/notifications/presentation/bloc/notification_bloc.dart';
+import 'package:eservelink/features/notifications/presentation/bloc/notification_state.dart';
+import 'package:eservelink/features/notifications/presentation/pages/notification_center_page.dart';
+import 'package:eservelink/features/notifications/presentation/widgets/notification_badge.dart';
 import 'package:eservelink/features/qr_scanner/presentation/pages/qr_scanner_page.dart';
 import 'package:eservelink/features/waiter/presentation/bloc/waiter_bloc.dart';
 import 'package:eservelink/features/waiter/presentation/bloc/waiter_event.dart';
@@ -79,14 +83,23 @@ class _WaiterHomePageState extends State<WaiterHomePage> {
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.live_tv),
-            tooltip: 'Live updates active',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('🔴 Live: Sessions update automatically'),
-                  duration: Duration(seconds: 2),
+          BlocBuilder<NotificationBloc, NotificationState>(
+            builder: (context, state) {
+              final unreadCount =
+                  state is NotificationsLoaded ? state.unreadCount : 0;
+
+              return IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NotificationCenterPage(),
+                    ),
+                  );
+                },
+                icon: BadgedWidget(
+                  badgeCount: unreadCount,
+                  child: const Icon(Icons.notifications),
                 ),
               );
             },
