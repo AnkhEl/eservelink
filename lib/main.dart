@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:eservelink/features/auth/domain/usecases/check_email_verification.dart';
 import 'package:eservelink/features/auth/domain/usecases/get_current_user.dart';
 import 'package:eservelink/features/auth/domain/usecases/register_with_email.dart';
@@ -31,15 +34,74 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:eservelink/core/util/injection_container.dart' as di;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:newrelic_mobile/config.dart';
+import 'package:newrelic_mobile/newrelic_navigation_observer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:newrelic_mobile/newrelic_mobile.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await di.init();
-  final sharedPref = await SharedPreferences.getInstance();
-  final isOnboarded = sharedPref.getBool('isOnboarded') ?? false;
-  runApp(MyApp(isOnboarded: isOnboarded));
+  runZonedGuarded(
+    () async {
+      // Initialize bindings inside the zone
+      WidgetsFlutterBinding.ensureInitialized();
+
+      // Set up Flutter error handling for New Relic
+      FlutterError.onError = NewrelicMobile.onError;
+
+      // Load environment variables
+      await dotenv.load(fileName: ".env");
+
+      String accessToken = "";
+
+      if (Platform.isAndroid) {
+        accessToken = dotenv.env['NEWRELIC_ANDROID_TOKEN'] ?? "";
+      } else if (Platform.isIOS) {
+        accessToken = dotenv.env['NEWRELIC_IOS_TOKEN'] ?? "";
+      }
+
+      if (accessToken.isEmpty) {
+        throw Exception(
+          'New Relic access token not found. '
+          'Please ensure .env file exists with NEWRELIC_ANDROID_TOKEN and NEWRELIC_IOS_TOKEN',
+        );
+      }
+
+      Config config = Config(
+        accessToken: accessToken,
+        analyticsEventEnabled: true,
+        webViewInstrumentation: true,
+        networkErrorRequestEnabled: true,
+        networkRequestEnabled: true,
+        crashReportingEnabled: true,
+        interactionTracingEnabled: true,
+        httpResponseBodyCaptureEnabled: true,
+        loggingEnabled: true,
+        printStatementAsEventsEnabled: true,
+        httpInstrumentationEnabled: true,
+        distributedTracingEnabled: true,
+      );
+
+      // Start New Relic agent using startAgent instead of start
+      await NewrelicMobile.instance.startAgent(config);
+
+      // Initialize Firebase and other services
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      await di.init();
+
+      final sharedPref = await SharedPreferences.getInstance();
+      final isOnboarded = sharedPref.getBool('isOnboarded') ?? false;
+
+      runApp(MyApp(isOnboarded: isOnboarded));
+    },
+    (Object error, StackTrace stackTrace) {
+      // Catch any errors that occur outside of Flutter's error handling
+      NewrelicMobile.instance.recordError(error, stackTrace);
+    },
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -100,6 +162,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'EServeLink',
+        navigatorObservers: [NewRelicNavigationObserver()],
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         ),

@@ -23,6 +23,7 @@ plugins {
     id("com.google.gms.google-services") version("4.3.15") apply false
     // END: FlutterFire Configuration
     id("org.jetbrains.kotlin.android") version "2.1.0" apply false
+    id("com.newrelic.agent.android") version "7.6.1" apply false
 }
 
 include(":app")
