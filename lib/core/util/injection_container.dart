@@ -118,7 +118,7 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<ChatRemoteDataSource>(
-    () => ChatRemoteDataSourceImpl(firestore: sl()),
+    () => ChatRemoteDataSourceImpl(firestore: sl(), notificationService: sl()),
   );
 
   // Repositories

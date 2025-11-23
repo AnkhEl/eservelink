@@ -4,17 +4,18 @@ import 'package:eservelink/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:eservelink/features/auth/presentation/bloc/auth_state.dart';
 import 'package:eservelink/features/home/presentation/pages/Home.dart';
 import 'package:eservelink/features/history/presentation/pages/history.dart';
+import 'package:eservelink/features/notifications/domain/entities/notification_entity.dart';
 import 'package:eservelink/features/notifications/presentation/bloc/notification_bloc.dart';
+import 'package:eservelink/features/notifications/presentation/bloc/notification_event.dart';
 import 'package:eservelink/features/notifications/presentation/bloc/notification_state.dart';
 import 'package:eservelink/features/notifications/presentation/pages/notification_center_page.dart';
 import 'package:eservelink/features/notifications/presentation/widgets/notification_badge.dart';
+import 'package:eservelink/features/notifications/presentation/widgets/notification_toast.dart';
 import 'package:eservelink/features/profile/presentation/pages/profile.dart';
 import 'package:eservelink/features/qr_scanner/presentation/pages/qr_scanner_page.dart';
 import 'package:eservelink/features/sessions/presentation/bloc/session_bloc.dart';
 import 'package:eservelink/features/sessions/presentation/bloc/session_event.dart';
 import 'package:eservelink/features/sessions/presentation/bloc/session_state.dart';
-import 'package:eservelink/features/sessions/presentation/pages/session_waiting_page.dart';
-import 'package:eservelink/features/sessions/presentation/pages/session_active_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -28,6 +29,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late List<Widget> pages;
   static bool _hasCheckedSession = false;
+  String? _lastShownNotificationId;
 
   late Home home;
   late History history;
@@ -38,14 +40,17 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    home = Home();
-    history = History();
-    profile = Profile();
+    home = const Home();
+    history = const History();
+    profile = const Profile();
     pages = [home, history, profile];
     super.initState();
 
     // Check for active session on init
     _checkForActiveSession();
+
+    // Start listening to notifications
+    _startListeningToNotifications();
   }
 
   void _checkForActiveSession() {
@@ -57,6 +62,37 @@ class _HomePageState extends State<HomePage> {
         LoadActiveSessionEvent(authState.user.uid),
       );
     }
+  }
+
+  void _startListeningToNotifications() {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthSuccess) {
+      context.read<NotificationBloc>().add(
+        StartListeningToNotificationsEvent(authState.user.uid),
+      );
+    }
+  }
+
+  void _showToastForNotification(NotificationEntity notification) {
+    // Don't show toast if we already showed it for this notification
+    if (_lastShownNotificationId == notification.id) {
+      return;
+    }
+
+    print('🔔 Showing toast for notification: ${notification.id}');
+
+    _lastShownNotificationId = notification.id;
+
+    NotificationToast.show(
+      context: context,
+      notification: notification,
+      onTap: () {
+        // Mark as read
+        context.read<NotificationBloc>().add(
+          MarkNotificationReadEvent(notification.id),
+        );
+      },
+    );
   }
 
   Future<void> _handleQrScan() async {
@@ -89,34 +125,53 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<SessionBloc, SessionState>(
-      listener: (context, state) {
-        if (state is SessionWaitingForWaiter) {
-          // Navigate to waiting screen
-          context.read<SessionBloc>().add(
-            ShowSessionWaitingEvent(state.session),
-          );
-        } else if (state is SessionActive) {
-          // Navigate to active session screen
-          context.read<SessionBloc>().add(
-            ShowSessionActiveEvent(state.session),
-          );
-        } else if (state is SessionError) {
-          // Show error
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
-          );
-        } else if (state is PingSent) {
-          // Show ping confirmation
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ Ping sent to waiter!'),
-              duration: Duration(seconds: 2),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        // Session listener
+        BlocListener<SessionBloc, SessionState>(
+          listener: (context, state) {
+            if (state is SessionWaitingForWaiter) {
+              context.read<SessionBloc>().add(
+                ShowSessionWaitingEvent(state.session),
+              );
+            } else if (state is SessionActive) {
+              context.read<SessionBloc>().add(
+                ShowSessionActiveEvent(state.session),
+              );
+            } else if (state is SessionError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            } else if (state is PingSent) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('✅ Ping sent to waiter!'),
+                  duration: Duration(seconds: 2),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            }
+          },
+        ),
+        // Notification listener
+        BlocListener<NotificationBloc, NotificationState>(
+          listener: (context, state) {
+            if (state is NotificationsLoaded) {
+              // Get the most recent unread notification
+              final unreadNotifications =
+                  state.notifications.where((n) => !n.isRead).toList();
+
+              if (unreadNotifications.isNotEmpty) {
+                final latestNotification = unreadNotifications.first;
+                _showToastForNotification(latestNotification);
+              }
+            }
+          },
+        ),
+      ],
       child: Scaffold(
         appBar: AppBar(
           actions: [
@@ -149,13 +204,13 @@ class _HomePageState extends State<HomePage> {
           height: 70,
           backgroundColor: Colors.white,
           color: Colors.black,
-          animationDuration: Duration(milliseconds: 500),
+          animationDuration: const Duration(milliseconds: 500),
           onTap: (int index) {
             setState(() {
               _currentTabIndex = index;
             });
           },
-          items: [
+          items: const [
             Icon(Icons.home, color: Colors.white, size: 30),
             Icon(Icons.history, color: Colors.white, size: 30),
             Icon(Icons.person, color: Colors.white, size: 30),
@@ -163,7 +218,6 @@ class _HomePageState extends State<HomePage> {
         ),
         body: BlocBuilder<SessionBloc, SessionState>(
           builder: (context, sessionState) {
-            // Show loading overlay when creating session
             return Stack(
               children: [
                 IndexedStack(index: _currentTabIndex, children: pages),
@@ -176,7 +230,7 @@ class _HomePageState extends State<HomePage> {
                           padding: const EdgeInsets.all(24.0),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
-                            children: [
+                            children: const [
                               CircularProgressIndicator(
                                 color: Colors.deepPurple,
                               ),

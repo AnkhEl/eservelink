@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:eservelink/core/error/failures.dart';
+import 'package:eservelink/core/services/notification_service.dart';
 import 'package:eservelink/features/chat/data/models/message_model.dart';
 
 abstract class ChatRemoteDataSource {
@@ -34,8 +35,12 @@ abstract class ChatRemoteDataSource {
 
 class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
   final FirebaseFirestore firestore;
+  final NotificationService notificationService;
 
-  ChatRemoteDataSourceImpl({required this.firestore});
+  ChatRemoteDataSourceImpl({
+    required this.firestore,
+    required this.notificationService,
+  });
 
   @override
   Future<MessageModel> sendMessage({
@@ -46,6 +51,27 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     required String text,
   }) async {
     try {
+      print('💬 Sending message in session: $sessionId');
+
+      // Get session to find recipient
+      final sessionDoc =
+          await firestore.collection('sessions').doc(sessionId).get();
+
+      if (!sessionDoc.exists) {
+        throw ServerFailure('Session not found');
+      }
+
+      final sessionData = sessionDoc.data()!;
+      final customerId = sessionData['customerId'] as String;
+      final waiterId = sessionData['waiterId'] as String?;
+
+      // Determine recipient
+      final recipientId = senderRole == 'customer' ? waiterId : customerId;
+
+      if (recipientId == null) {
+        throw ServerFailure('Recipient not found');
+      }
+
       // Create message document
       final messageRef =
           firestore
@@ -70,8 +96,22 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       final doc = await messageRef.get();
       final message = MessageModel.fromFirestore(doc);
 
+      print('✅ Message sent successfully');
+
+      // Send notification to recipient
+      await notificationService.sendMessageNotification(
+        recipientId: recipientId,
+        senderId: senderId,
+        senderName: senderName,
+        messageText: text,
+        sessionId: sessionId,
+      );
+
+      print('✅ Message notification sent to recipient');
+
       return message;
     } catch (e) {
+      print('❌ Failed to send message: $e');
       throw ServerFailure('Failed to send message: $e');
     }
   }
@@ -97,6 +137,8 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
     required String userId,
   }) async {
     try {
+      print('📖 Marking messages as read for user: $userId');
+
       // Get all unread messages NOT sent by this user
       final unreadMessages =
           await firestore
@@ -114,7 +156,9 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
       }
 
       await batch.commit();
+      print('✅ Messages marked as read');
     } catch (e) {
+      print('❌ Failed to mark messages as read: $e');
       throw ServerFailure('Failed to mark messages as read: $e');
     }
   }
@@ -137,6 +181,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
             'timestamp': FieldValue.serverTimestamp(),
           });
     } catch (e) {
+      print('❌ Failed to send typing indicator: $e');
       throw ServerFailure('Failed to send typing indicator: $e');
     }
   }
@@ -177,6 +222,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
 
       return unreadMessages.docs.length;
     } catch (e) {
+      print('❌ Failed to get unread count: $e');
       return 0;
     }
   }
