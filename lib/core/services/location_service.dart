@@ -6,7 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 class LocationService {
   /// Get the current location of the device
-  /// Returns Either<Failure, Position> with latitude and longitude
+  /// Returns Either`<`Failure, Position`>` with latitude and longitude
   Future<Either<Failure, Position>> getCurrentLocation() async {
     try {
       // Check if location services are enabled
