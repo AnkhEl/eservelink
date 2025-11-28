@@ -6,6 +6,7 @@ import 'package:eservelink/features/sessions/presentation/bloc/session_bloc.dart
 import 'package:eservelink/features/sessions/presentation/bloc/session_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lottie/lottie.dart';
 
 class SessionWaitingPage extends StatefulWidget {
   final SessionEntity session;
@@ -77,106 +78,101 @@ class _SessionWaitingPageState extends State<SessionWaitingPage> {
           ),
         ],
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Loading animation
-              SizedBox(
-                height: 200,
-                width: 200,
-                child: CircularProgressIndicator(
-                  strokeWidth: 8,
-                  color: Colors.deepPurple,
+      body: SingleChildScrollView(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Lottie.asset('assets/animations/waiting.json'),
+
+                // Title
+                Text(
+                  'Waiting for Waiter',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
 
-              SizedBox(height: 40),
+                SizedBox(height: 10),
 
-              // Title
-              Text(
-                'Waiting for Waiter',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple,
+                // Description
+                Text(
+                  'Your table session has been created!\nA waiter will join shortly to assist you.',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[700],
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
 
-              SizedBox(height: 16),
+                SizedBox(height: 10),
 
-              // Description
-              Text(
-                'Your table session has been created!\nA waiter will join shortly to assist you.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[700],
-                  height: 1.5,
+                // Session info card
+                Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      children: [
+                        _buildInfoRow(
+                          Icons.table_restaurant,
+                          'Table',
+                          _extractTableNumber(widget.session.tableId),
+                        ),
+                        Divider(height: 24),
+                        _buildInfoRow(
+                          Icons.person,
+                          'Customer',
+                          widget.session.customerName,
+                        ),
+                        Divider(height: 24),
+                        _buildInfoRow(
+                          Icons.access_time,
+                          'Started',
+                          _formatTime(widget.session.startTime),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                textAlign: TextAlign.center,
-              ),
 
-              SizedBox(height: 40),
+                SizedBox(height: 15),
 
-              // Session info card
-              Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
+                // Tip text
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  ),
+                  child: Row(
                     children: [
-                      _buildInfoRow(
-                        Icons.table_restaurant,
-                        'Table',
-                        _extractTableNumber(widget.session.tableId),
-                      ),
-                      Divider(height: 24),
-                      _buildInfoRow(
-                        Icons.person,
-                        'Customer',
-                        widget.session.customerName,
-                      ),
-                      Divider(height: 24),
-                      _buildInfoRow(
-                        Icons.access_time,
-                        'Started',
-                        _formatTime(widget.session.startTime),
+                      Icon(Icons.info_outline, color: Colors.blue),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Once a waiter scans your table QR, you\'ll be connected!',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.blue[900],
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ),
-
-              SizedBox(height: 32),
-
-              // Tip text
-              Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, color: Colors.blue),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Once a waiter scans your table QR, you\'ll be connected automatically!',
-                        style: TextStyle(fontSize: 14, color: Colors.blue[900]),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
