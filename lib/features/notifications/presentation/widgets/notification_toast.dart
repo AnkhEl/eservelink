@@ -5,7 +5,7 @@ class NotificationToast {
   static void show({
     required BuildContext context,
     required NotificationEntity notification,
-    VoidCallback? onTap,
+    required VoidCallback onTap,
   }) {
     final overlay = Overlay.of(context);
     late OverlayEntry overlayEntry;
@@ -16,7 +16,7 @@ class NotificationToast {
             notification: notification,
             onTap: () {
               overlayEntry.remove();
-              onTap?.call();
+              onTap(); // Call the navigation callback
             },
             onDismiss: () => overlayEntry.remove(),
           ),

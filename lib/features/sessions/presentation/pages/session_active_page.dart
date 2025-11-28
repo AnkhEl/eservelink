@@ -89,11 +89,39 @@ class _SessionActivePageState extends State<SessionActivePage> {
       context: context,
       notification: notification,
       onTap: () {
+        print('🔔 [SessionActivePage] Toast tapped');
+
         // Mark as read
         context.read<NotificationBloc>().add(
           MarkNotificationReadEvent(notification.id),
         );
+
+        // Navigate to chat if it's a message notification
+        if (notification.type == NotificationType.message) {
+          _navigateToChat(notification);
+        }
+        // Otherwise, we're already on the session page, so do nothing
       },
+    );
+  }
+
+  Future<void> _navigateToChat(NotificationEntity notification) async {
+    final senderName = notification.data['senderName'] as String?;
+
+    print('💬 [SessionActivePage] Opening chat');
+
+    // We already have session data, so just navigate
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => ChatPage(
+              sessionId: widget.session.id,
+              otherUserName:
+                  senderName ?? widget.session.waiterName ?? "Waiter",
+              tableNumber: _extractTableNumber(widget.session.tableId),
+            ),
+      ),
     );
   }
 
