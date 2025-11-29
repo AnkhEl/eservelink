@@ -6,6 +6,8 @@ import 'package:eservelink/features/home/presentation/bloc/review/review_bloc.da
 import 'package:eservelink/features/home/presentation/bloc/review/review_event.dart';
 import 'package:eservelink/features/home/presentation/bloc/review/review_state.dart';
 import 'package:eservelink/features/home/presentation/widgets/reviews_section.dart';
+import 'package:eservelink/features/menu/presentation/bloc/menu_bloc.dart';
+import 'package:eservelink/features/menu/presentation/pages/menu_browse_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eservelink/core/util/injection_container.dart' as di;
@@ -219,7 +221,6 @@ class RestaurantDetailPage extends StatelessWidget {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            // TODO: Implement directions functionality
                             _openDirections(context);
                           },
                           icon: Icon(Icons.directions),
@@ -236,6 +237,31 @@ class RestaurantDetailPage extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                  SizedBox(height: 12),
+
+                  // Browse Menu Button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        _openMenu(context);
+                      },
+                      icon: Icon(Icons.restaurant_menu, size: 24),
+                      label: Text(
+                        'Browse Menu',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                      ),
+                    ),
                   ),
                   SizedBox(height: 24),
                   Divider(),
@@ -455,6 +481,22 @@ class RestaurantDetailPage extends StatelessWidget {
             ),
           );
         }),
+      ),
+    );
+  }
+
+  void _openMenu(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => BlocProvider(
+              create: (context) => di.sl<MenuBloc>(),
+              child: MenuBrowsePage(
+                restaurantId: restaurant.id,
+                restaurantName: restaurant.name,
+              ),
+            ),
       ),
     );
   }
