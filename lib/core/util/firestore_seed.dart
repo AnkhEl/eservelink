@@ -556,6 +556,261 @@ class FirestoreSeed {
     }
   }
 
+  /// Seed menu categories and items for a given restaurant
+  static Future<void> seedMenu(String restaurantId) async {
+    final firestore = FirebaseFirestore.instance;
+
+    print('🌱 Seeding menu for restaurant: $restaurantId');
+
+    // Create categories
+    final categories = [
+      {
+        'restaurantId': restaurantId,
+        'name': 'Starters',
+        'description': 'Appetizers and light bites',
+        'order': 1,
+        'iconName': 'local_dining',
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'restaurantId': restaurantId,
+        'name': 'Mains',
+        'description': 'Main course dishes',
+        'order': 2,
+        'iconName': 'restaurant',
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'restaurantId': restaurantId,
+        'name': 'Desserts',
+        'description': 'Sweet treats',
+        'order': 3,
+        'iconName': 'cake',
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'restaurantId': restaurantId,
+        'name': 'Drinks',
+        'description': 'Beverages',
+        'order': 4,
+        'iconName': 'local_bar',
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+    ];
+
+    for (var category in categories) {
+      await firestore.collection('menu_categories').add(category);
+    }
+
+    print('✅ Seeded ${categories.length} categories');
+
+    // Create menu items
+    final items = [
+      // Starters
+      {
+        'restaurantId': restaurantId,
+        'name': 'Bruschetta',
+        'description':
+            'Toasted bread topped with fresh tomatoes, garlic, basil and olive oil',
+        'price': 65.00,
+        'category': 'Starters',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': ['Vegetarian'],
+        'preparationTime': 10,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'restaurantId': restaurantId,
+        'name': 'Calamari',
+        'description': 'Crispy fried calamari rings served with lemon aioli',
+        'price': 85.00,
+        'category': 'Starters',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': [],
+        'preparationTime': 15,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'restaurantId': restaurantId,
+        'name': 'Greek Salad',
+        'description':
+            'Fresh lettuce, tomatoes, cucumber, olives, feta cheese and Greek dressing',
+        'price': 70.00,
+        'category': 'Starters',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': ['Vegetarian', 'Gluten-Free'],
+        'preparationTime': 8,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+
+      // Mains
+      {
+        'restaurantId': restaurantId,
+        'name': 'Ribeye Steak',
+        'description':
+            '300g ribeye steak grilled to perfection, served with chips and vegetables',
+        'price': 185.00,
+        'category': 'Mains',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': ['Gluten-Free'],
+        'preparationTime': 25,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'restaurantId': restaurantId,
+        'name': 'Margherita Pizza',
+        'description':
+            'Classic pizza with tomato sauce, mozzarella and fresh basil',
+        'price': 95.00,
+        'category': 'Mains',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': ['Vegetarian'],
+        'preparationTime': 20,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'restaurantId': restaurantId,
+        'name': 'Grilled Salmon',
+        'description':
+            'Atlantic salmon fillet with lemon butter sauce, served with rice and vegetables',
+        'price': 165.00,
+        'category': 'Mains',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': ['Gluten-Free'],
+        'preparationTime': 22,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'restaurantId': restaurantId,
+        'name': 'Chicken Alfredo',
+        'description': 'Creamy fettuccine pasta with grilled chicken breast',
+        'price': 125.00,
+        'category': 'Mains',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': [],
+        'preparationTime': 18,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'restaurantId': restaurantId,
+        'name': 'Vegetable Curry',
+        'description':
+            'Aromatic vegetable curry served with basmati rice and naan bread',
+        'price': 110.00,
+        'category': 'Mains',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': ['Vegetarian', 'Vegan'],
+        'preparationTime': 20,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+
+      // Desserts
+      {
+        'restaurantId': restaurantId,
+        'name': 'Chocolate Lava Cake',
+        'description':
+            'Warm chocolate cake with a molten chocolate center, served with vanilla ice cream',
+        'price': 65.00,
+        'category': 'Desserts',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': ['Vegetarian'],
+        'preparationTime': 12,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'restaurantId': restaurantId,
+        'name': 'Tiramisu',
+        'description':
+            'Classic Italian dessert with coffee-soaked ladyfingers and mascarpone cream',
+        'price': 60.00,
+        'category': 'Desserts',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': ['Vegetarian'],
+        'preparationTime': 5,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'restaurantId': restaurantId,
+        'name': 'Cheesecake',
+        'description': 'Creamy New York style cheesecake with berry compote',
+        'price': 55.00,
+        'category': 'Desserts',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': ['Vegetarian'],
+        'preparationTime': 5,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+
+      // Drinks
+      {
+        'restaurantId': restaurantId,
+        'name': 'Freshly Squeezed Orange Juice',
+        'description': 'Fresh orange juice made to order',
+        'price': 35.00,
+        'category': 'Drinks',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': ['Vegetarian', 'Vegan', 'Gluten-Free'],
+        'preparationTime': 5,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'restaurantId': restaurantId,
+        'name': 'Cappuccino',
+        'description': 'Classic espresso with steamed milk and foam',
+        'price': 28.00,
+        'category': 'Drinks',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': ['Vegetarian'],
+        'preparationTime': 5,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'restaurantId': restaurantId,
+        'name': 'Craft Beer',
+        'description': 'Selection of local craft beers on tap',
+        'price': 45.00,
+        'category': 'Drinks',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': ['Vegan'],
+        'preparationTime': 2,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+      {
+        'restaurantId': restaurantId,
+        'name': 'Sparkling Water',
+        'description': 'Chilled sparkling mineral water',
+        'price': 22.00,
+        'category': 'Drinks',
+        'imageUrl': null,
+        'isAvailable': true,
+        'dietaryInfo': ['Vegetarian', 'Vegan', 'Gluten-Free'],
+        'preparationTime': 2,
+        'createdAt': FieldValue.serverTimestamp(),
+      },
+    ];
+
+    for (var item in items) {
+      await firestore.collection('menu_items').add(item);
+    }
+
+    print('✅ Seeded ${items.length} menu items');
+    print('🎉 Menu seeding complete!');
+  }
+
   /// Seed everything at once (restaurants → tables → reviews)
   static Future<void> seedAll() async {
     print('🌱 Starting complete database seeding...\n');

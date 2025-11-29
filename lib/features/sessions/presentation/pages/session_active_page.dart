@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:eservelink/core/util/injection_container.dart' as di;
 import 'package:eservelink/features/chat/presentation/pages/chat_page.dart';
+import 'package:eservelink/features/menu/presentation/bloc/menu_bloc.dart';
+import 'package:eservelink/features/menu/presentation/pages/menu_browse_page.dart';
 import 'package:eservelink/features/notifications/domain/entities/notification_entity.dart';
 import 'package:eservelink/features/notifications/presentation/bloc/notification_bloc.dart';
 import 'package:eservelink/features/notifications/presentation/bloc/notification_event.dart';
@@ -390,8 +393,26 @@ class _SessionActivePageState extends State<SessionActivePage> {
                 title: 'Browse Menu',
                 subtitle: 'View available items',
                 color: Colors.orange,
-                isDisabled: true,
-                onTap: null,
+                isDisabled: false, // Changed from true to false
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => BlocProvider(
+                            create: (context) => di.sl<MenuBloc>(),
+                            child: MenuBrowsePage(
+                              restaurantId:
+                                  widget
+                                      .session
+                                      .restaurantId, // You'll need to add this field
+                              restaurantName:
+                                  'Restaurant Menu', // Or pass restaurant name
+                            ),
+                          ),
+                    ),
+                  );
+                },
               ),
 
               const SizedBox(height: 12),

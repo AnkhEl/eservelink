@@ -19,6 +19,7 @@ import 'package:eservelink/features/home/domain/usecases/add_restaurant_usecase.
 import 'package:eservelink/features/home/domain/usecases/get_nearby_restaurants_usecase.dart';
 import 'package:eservelink/features/home/domain/usecases/get_restaurant_by_id_usecase.dart';
 import 'package:eservelink/features/home/presentation/bloc/restaurant_bloc.dart';
+import 'package:eservelink/features/menu/presentation/bloc/menu_bloc.dart';
 import 'package:eservelink/features/notifications/presentation/bloc/notification_bloc.dart';
 import 'package:eservelink/features/onboarding/presentation/pages/onboarding_page.dart';
 import 'package:eservelink/features/qr_scanner/presentation/bloc/qr_scanner_bloc.dart';
@@ -158,6 +159,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<NotificationBloc>(
           create: (_) => di.sl<NotificationBloc>(),
         ),
+        BlocProvider(create: (_) => di.sl<MenuBloc>()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

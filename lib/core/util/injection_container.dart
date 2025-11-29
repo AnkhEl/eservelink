@@ -25,6 +25,16 @@ import 'package:eservelink/features/home/domain/usecases/get_nearby_restaurants_
 import 'package:eservelink/features/home/domain/usecases/get_rating_breakdown_usecase.dart';
 import 'package:eservelink/features/home/domain/usecases/get_restaurant_by_id_usecase.dart';
 import 'package:eservelink/features/home/domain/usecases/get_restaurant_reviews_usecase.dart';
+import 'package:eservelink/features/menu/data/datasources/menu_remote_data_source.dart';
+import 'package:eservelink/features/menu/data/repositories/menu_repository_impl.dart';
+import 'package:eservelink/features/menu/domain/repositories/menu_repository.dart';
+import 'package:eservelink/features/menu/domain/usecases/get_categories_usecase.dart';
+import 'package:eservelink/features/menu/domain/usecases/get_menu_item_usecase.dart';
+import 'package:eservelink/features/menu/domain/usecases/get_menu_items_by_category_usecase.dart';
+import 'package:eservelink/features/menu/domain/usecases/get_menu_items_usecase.dart';
+import 'package:eservelink/features/menu/domain/usecases/search_menu_items_usecase.dart';
+import 'package:eservelink/features/menu/domain/usecases/stream_menu_items_usecase.dart';
+import 'package:eservelink/features/menu/presentation/bloc/menu_bloc.dart';
 import 'package:eservelink/features/notifications/data/datasources/notification_remote_data_source.dart';
 import 'package:eservelink/features/notifications/data/repositories/notification_repository_impl.dart';
 import 'package:eservelink/features/notifications/domain/repositories/notification_repository.dart';
@@ -114,11 +124,18 @@ Future<void> init() async {
   );
 
   sl.registerLazySingleton<NotificationRemoteDataSource>(
-    () => NotificationRemoteDataSourceImpl(firestore: sl()),
+    () => NotificationRemoteDataSourceImpl(firestore: sl<FirebaseFirestore>()),
   );
 
   sl.registerLazySingleton<ChatRemoteDataSource>(
-    () => ChatRemoteDataSourceImpl(firestore: sl(), notificationService: sl()),
+    () => ChatRemoteDataSourceImpl(
+      firestore: sl<FirebaseFirestore>(),
+      notificationService: sl<NotificationService>(),
+    ),
+  );
+
+  sl.registerLazySingleton<MenuRemoteDataSource>(
+    () => MenuRemoteDataSourceImpl(firestore: sl<FirebaseFirestore>()),
   );
 
   // Repositories
@@ -170,6 +187,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<NotificationRepository>(
     () => NotificationRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<MenuRepository>(
+    () => MenuRepositoryImpl(remoteDataSource: sl()),
   );
 
   // Use Cases
@@ -267,6 +288,13 @@ Future<void> init() async {
   sl.registerLazySingleton(() => DeleteNotificationUseCase(sl()));
   sl.registerLazySingleton(() => AcknowledgePingUseCase(sl()));
 
+  sl.registerLazySingleton(() => GetCategoriesUseCase(sl()));
+  sl.registerLazySingleton(() => GetMenuItemsUseCase(sl()));
+  sl.registerLazySingleton(() => GetMenuItemsByCategoryUseCase(sl()));
+  sl.registerLazySingleton(() => SearchMenuItemsUseCase(sl()));
+  sl.registerLazySingleton(() => GetMenuItemUseCase(sl()));
+  sl.registerLazySingleton(() => StreamMenuItemsUseCase(sl()));
+
   //Blocs
 
   sl.registerFactory<WaiterBloc>(
@@ -297,6 +325,17 @@ Future<void> init() async {
       deleteNotification: sl(),
     ),
   );
+
+  sl.registerFactory(
+    () => MenuBloc(
+      getCategories: sl<GetCategoriesUseCase>(),
+      getMenuItems: sl<GetMenuItemsUseCase>(),
+      getMenuItemsByCategory: sl<GetMenuItemsByCategoryUseCase>(),
+      searchMenuItems: sl<SearchMenuItemsUseCase>(),
+      getMenuItem: sl<GetMenuItemUseCase>(),
+    ),
+  );
+
   // TODO: Add other core service registrations (like network checker, local storage, etc.) here as needed
   sl.registerLazySingleton<NotificationService>(
     () => NotificationService(
