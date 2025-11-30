@@ -45,104 +45,111 @@ class MenuItemCard extends StatelessWidget {
               ),
             ),
 
-            // Content - Use Expanded with SingleChildScrollView to prevent overflow
+            // Content
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Name
-                    Text(
-                      item.name,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                    const SizedBox(height: 3),
-
-                    // Description
-                    Flexible(
-                      child: Text(
-                        item.description,
-                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-
-                    const Spacer(),
-
-                    // Price and Time Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Flexible(
+                        // Name
+                        Text(
+                          item.name,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+
+                        const SizedBox(height: 3),
+
+                        // Description - with explicit width constraint
+                        SizedBox(
+                          width: constraints.maxWidth,
                           child: Text(
-                            'R ${item.price.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.deepPurple,
+                            item.description,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[600],
                             ),
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+
+                        const Spacer(),
+
+                        // Price and Time Row
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Icon(
-                              Icons.access_time,
-                              size: 12,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              '${item.preparationTime}m',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey[600],
+                            Flexible(
+                              child: Text(
+                                'R ${item.price.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
+                            ),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.access_time,
+                                  size: 12,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  '${item.preparationTime}m',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
 
-                    // Dietary Info Tags - Only show if there's space
-                    if (item.dietaryInfo.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: 3,
-                        runSpacing: 3,
-                        children:
-                            item.dietaryInfo.take(2).map((info) {
-                              return Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 5,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.shade100,
-                                  borderRadius: BorderRadius.circular(3),
-                                ),
-                                child: Text(
-                                  info,
-                                  style: TextStyle(
-                                    fontSize: 8,
-                                    color: Colors.green.shade800,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                      ),
-                    ],
-                  ],
+                        // Dietary Info Tags
+                        if (item.dietaryInfo.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 3,
+                            runSpacing: 3,
+                            children:
+                                item.dietaryInfo.take(2).map((info) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 5,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.shade100,
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                    child: Text(
+                                      info,
+                                      style: TextStyle(
+                                        fontSize: 8,
+                                        color: Colors.green.shade800,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                          ),
+                        ],
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
