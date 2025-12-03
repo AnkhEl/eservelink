@@ -3,7 +3,7 @@ import 'package:eservelink/features/orders/presentation/bloc/cart/cart_event.dar
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eservelink/features/orders/data/models/cart_item_model.dart';
 import 'package:eservelink/features/orders/domain/entities/cart_item_entity.dart';
-import 'package:eservelink/features/orders/presentation/bloc/cart_state.dart';
+import 'package:eservelink/features/orders/presentation/bloc/cart/cart_state.dart';
 
 class CartBloc extends Bloc<CartEvent, CartState> {
   // In-memory cart storage (can be replaced with persistent storage later)
