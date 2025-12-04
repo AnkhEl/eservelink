@@ -46,6 +46,21 @@ import 'package:eservelink/features/notifications/domain/usecases/mark_notificat
 import 'package:eservelink/features/notifications/domain/usecases/stream_notifications_usecase.dart';
 import 'package:eservelink/features/notifications/domain/usecases/stream_unread_notifications_usecase.dart';
 import 'package:eservelink/features/notifications/presentation/bloc/notification_bloc.dart';
+import 'package:eservelink/features/orders/data/datasources/order_remote_data_source.dart';
+import 'package:eservelink/features/orders/data/repositories/order_repository_impl.dart';
+import 'package:eservelink/features/orders/domain/repositories/order_repository.dart';
+import 'package:eservelink/features/orders/domain/usecases/cancel_order_usecase.dart';
+import 'package:eservelink/features/orders/domain/usecases/confirm_order_usecase.dart';
+import 'package:eservelink/features/orders/domain/usecases/get_session_order_submissions_usecase.dart';
+import 'package:eservelink/features/orders/domain/usecases/get_waiter_pending_orders_usecase.dart';
+import 'package:eservelink/features/orders/domain/usecases/mark_order_preparing_usecase.dart';
+import 'package:eservelink/features/orders/domain/usecases/mark_order_served_usecase.dart';
+import 'package:eservelink/features/orders/domain/usecases/stream_session_order_submissions_usecase.dart';
+import 'package:eservelink/features/orders/domain/usecases/stream_waiter_pending_orders_usecase.dart';
+import 'package:eservelink/features/orders/domain/usecases/submit_order_usecase.dart';
+import 'package:eservelink/features/orders/domain/usecases/update_order_status_usecase.dart';
+import 'package:eservelink/features/orders/presentation/bloc/cart/cart_bloc.dart';
+import 'package:eservelink/features/orders/presentation/bloc/order/order_bloc.dart';
 import 'package:eservelink/features/qr_scanner/data/repositories/qr_scanner_repository_impl.dart';
 import 'package:eservelink/features/qr_scanner/domain/repositories/qr_scanner_repository.dart';
 import 'package:eservelink/features/qr_scanner/domain/usecases/scan_qr_code.dart';
@@ -138,6 +153,10 @@ Future<void> init() async {
     () => MenuRemoteDataSourceImpl(firestore: sl<FirebaseFirestore>()),
   );
 
+  sl.registerLazySingleton<OrderRemoteDataSource>(
+    () => OrderRemoteDataSourceImpl(firestore: sl()),
+  );
+
   // Repositories
   sl.registerLazySingleton<UserRepository>(
     () => UserRepositoryImpl(firestore: sl<FirebaseFirestore>()),
@@ -191,6 +210,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<MenuRepository>(
     () => MenuRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  sl.registerLazySingleton<OrderRepository>(
+    () => OrderRepositoryImpl(remoteDataSource: sl()),
   );
 
   // Use Cases
@@ -295,6 +318,17 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetMenuItemUseCase(sl()));
   sl.registerLazySingleton(() => StreamMenuItemsUseCase(sl()));
 
+  sl.registerLazySingleton(() => SubmitOrderUseCase(sl()));
+  sl.registerLazySingleton(() => GetSessionOrderSubmissionsUseCase(sl()));
+  sl.registerLazySingleton(() => GetWaiterPendingOrdersUseCase(sl()));
+  sl.registerLazySingleton(() => StreamSessionOrderSubmissionsUseCase(sl()));
+  sl.registerLazySingleton(() => StreamWaiterPendingOrdersUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateOrderStatusUseCase(sl()));
+  sl.registerLazySingleton(() => ConfirmOrderUseCase(sl()));
+  sl.registerLazySingleton(() => MarkOrderPreparingUseCase(sl()));
+  sl.registerLazySingleton(() => MarkOrderServedUseCase(sl()));
+  sl.registerLazySingleton(() => CancelOrderUseCase(sl()));
+
   //Blocs
 
   sl.registerFactory<WaiterBloc>(
@@ -333,6 +367,19 @@ Future<void> init() async {
       getMenuItemsByCategory: sl<GetMenuItemsByCategoryUseCase>(),
       searchMenuItems: sl<SearchMenuItemsUseCase>(),
       getMenuItem: sl<GetMenuItemUseCase>(),
+    ),
+  );
+
+  sl.registerFactory(() => CartBloc());
+  sl.registerFactory(
+    () => OrderBloc(
+      submitOrder: sl(),
+      streamSessionOrders: sl(),
+      streamWaiterOrders: sl(),
+      confirmOrder: sl(),
+      markOrderPreparing: sl(),
+      markOrderServed: sl(),
+      cancelOrder: sl(),
     ),
   );
 

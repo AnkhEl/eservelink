@@ -9,6 +9,10 @@ import 'package:eservelink/features/notifications/presentation/bloc/notification
 import 'package:eservelink/features/notifications/presentation/bloc/notification_event.dart';
 import 'package:eservelink/features/notifications/presentation/bloc/notification_state.dart';
 import 'package:eservelink/features/notifications/presentation/widgets/notification_toast.dart';
+import 'package:eservelink/features/orders/presentation/bloc/cart/cart_bloc.dart';
+import 'package:eservelink/features/orders/presentation/bloc/cart/cart_state.dart';
+import 'package:eservelink/features/orders/presentation/pages/cart_page.dart';
+import 'package:eservelink/features/orders/presentation/pages/order_tracking_page.dart';
 import 'package:eservelink/features/sessions/domain/entities/session_entity.dart';
 import 'package:eservelink/features/sessions/presentation/bloc/session_bloc.dart';
 import 'package:eservelink/features/sessions/presentation/bloc/session_event.dart';
@@ -156,6 +160,56 @@ class _SessionActivePageState extends State<SessionActivePage> {
             },
             icon: const Icon(Icons.arrow_back),
           ),
+          actions: [
+            // Cart icon with badge
+            BlocBuilder<CartBloc, CartState>(
+              builder: (context, state) {
+                final itemCount = state is CartLoaded ? state.itemCount : 0;
+
+                return Stack(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => CartPage(session: widget.session),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.shopping_cart),
+                    ),
+                    if (itemCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 18,
+                            minHeight: 18,
+                          ),
+                          child: Text(
+                            '$itemCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -380,20 +434,19 @@ class _SessionActivePageState extends State<SessionActivePage> {
 
               const SizedBox(height: 24),
 
-              // Coming Soon Section
+              // Ordering Section
               const Text(
-                'Coming Soon',
+                'Ordering',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
 
-              // Menu Card (Disabled)
+              // Browse Menu Card
               _buildActionCard(
                 icon: Icons.restaurant_menu,
                 title: 'Browse Menu',
                 subtitle: 'View available items',
                 color: Colors.orange,
-                isDisabled: false, // Changed from true to false
                 onTap: () {
                   Navigator.push(
                     context,
@@ -402,12 +455,9 @@ class _SessionActivePageState extends State<SessionActivePage> {
                           (context) => BlocProvider(
                             create: (context) => di.sl<MenuBloc>(),
                             child: MenuBrowsePage(
-                              restaurantId:
-                                  widget
-                                      .session
-                                      .restaurantId, // You'll need to add this field
+                              restaurantId: widget.session.restaurantId,
                               restaurantName:
-                                  'Restaurant Menu', // Or pass restaurant name
+                                  widget.session.restaurantName ?? 'Restaurant',
                             ),
                           ),
                     ),
@@ -417,9 +467,36 @@ class _SessionActivePageState extends State<SessionActivePage> {
 
               const SizedBox(height: 12),
 
-              // Bill Card (Disabled)
+              // View Orders Card
               _buildActionCard(
                 icon: Icons.receipt_long,
+                title: 'View Orders',
+                subtitle: 'Track your submitted orders',
+                color: Colors.teal,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) =>
+                              OrderTrackingPage(session: widget.session),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              // Coming Soon Section
+              const Text(
+                'Coming Soon',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+
+              // Bill Card (Disabled)
+              _buildActionCard(
+                icon: Icons.receipt,
                 title: 'View Bill',
                 subtitle: 'Check your current total',
                 color: Colors.green,
@@ -448,7 +525,7 @@ class _SessionActivePageState extends State<SessionActivePage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Your session is active. Feel free to chat with your waiter or browse the menu when available.',
+                          'Your session is active. Browse the menu, place orders, and chat with your waiter anytime!',
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.blue.shade900,

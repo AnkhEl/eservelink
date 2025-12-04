@@ -22,6 +22,8 @@ import 'package:eservelink/features/home/presentation/bloc/restaurant_bloc.dart'
 import 'package:eservelink/features/menu/presentation/bloc/menu_bloc.dart';
 import 'package:eservelink/features/notifications/presentation/bloc/notification_bloc.dart';
 import 'package:eservelink/features/onboarding/presentation/pages/onboarding_page.dart';
+import 'package:eservelink/features/orders/presentation/bloc/cart/cart_bloc.dart';
+import 'package:eservelink/features/orders/presentation/bloc/order/order_bloc.dart';
 import 'package:eservelink/features/qr_scanner/presentation/bloc/qr_scanner_bloc.dart';
 import 'package:eservelink/features/sessions/domain/repositories/session_repository.dart';
 import 'package:eservelink/features/sessions/domain/usecases/get_active_session_usecase.dart';
@@ -160,6 +162,8 @@ class MyApp extends StatelessWidget {
           create: (_) => di.sl<NotificationBloc>(),
         ),
         BlocProvider(create: (_) => di.sl<MenuBloc>()),
+        BlocProvider(create: (_) => di.sl<CartBloc>()),
+        BlocProvider(create: (_) => di.sl<OrderBloc>()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
